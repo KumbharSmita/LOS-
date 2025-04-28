@@ -1,0 +1,5 @@
+package com.imperacred.BankLoanApplication.model;
+
+public class UnderwritingResults {
+
+}
