@@ -1,37 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
-    <Appenders>
-        <!-- Console Appender -->
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n" />
-        </Console>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="logPath">C:/log</Property>
+        <Property name="logPattern">%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Property>
+    </Properties>
 
-        <!-- File Appender -->
-        <File name="File" fileName="logs/app.log">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n" />
+    <Appenders>
+     
+        <RollingFile name="DailyRollingFile" fileName="${logPath}/personalloan.log"
+                     filePattern="${logPath}/personalloan-%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="${logPattern}" />
             <Policies>
-                <SizeBasedTriggeringPolicy size="10MB"/>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="50MB"/>
             </Policies>
-        </File>
+        </RollingFile>
+
+     
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${logPattern}" />
+        </Console>
     </Appenders>
 
     <Loggers>
-        <!-- Debug logging for service layer -->
-        <Logger name="com.imperacred.BankLoanApplication.service.impl" level="debug" additivity="false">
-            <AppenderRef ref="Console" />
-            <AppenderRef ref="File" />
+      
+        <Logger name="com.imperacred" level="debug" additivity="false">
+            <AppenderRef ref="DailyRollingFile"/>
+            <AppenderRef ref="Console"/>
         </Logger>
 
-        <!-- Debug logging for controller layer -->
-        <Logger name="com.imperacred.BankLoanApplication.controller" level="debug" additivity="false">
-            <AppenderRef ref="Console" />
-            <AppenderRef ref="File" />
+        
+        <Logger name="com.imperacred.error" level="error" additivity="false">
+            <AppenderRef ref="DailyRollingFile"/>
+            <AppenderRef ref="Console"/>
         </Logger>
 
-        <!-- Root logger (Info level) -->
+       
+        <Logger name="org.apache.catalina" level="off"/>
+        <Logger name="org.apache.coyote" level="off"/>
+        <Logger name="org.apache.tomcat" level="off"/>
+        <Logger name="org.springframework" level="off"/>
+        <Logger name="org.hibernate" level="off"/>
+        <Logger name="com.zaxxer" level="off"/>
+        <Logger name="org.thymeleaf" level="off"/>
+        <Logger name="org.springframework.boot.devtools" level="off"/>
+        <Logger name="org.springframework.data" level="off"/>
+        <Logger name="org.springframework.web" level="off"/>
+        <Logger name="org.springframework.security" level="off"/>
+        <Logger name="org.springframework.context" level="off"/>
+        <Logger name="org.springframework.jdbc" level="off"/>
+
+       
         <Root level="info">
-            <AppenderRef ref="Console" />
-            <AppenderRef ref="File" />
+            <AppenderRef ref="DailyRollingFile"/>
+            <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
 </Configuration>

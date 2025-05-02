@@ -1038,3 +1038,98 @@
 2025-05-02 10:47:12 [Thread-59] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
 2025-05-02 10:47:12 [Thread-59] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-15 - Shutdown initiated...
 2025-05-02 10:47:12 [Thread-59] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-15 - Shutdown completed.
+2025-05-02 10:49:53 [restartedMain] INFO  com.imperacred.BankLoanApplication.BankLoanApplication - Starting BankLoanApplication using Java 21.0.6 with PID 13068 (C:\Users\Administrator\git\LOS-\target\classes started by Administrator in C:\Users\Administrator\git\LOS-)
+2025-05-02 10:49:53 [restartedMain] INFO  com.imperacred.BankLoanApplication.BankLoanApplication - No active profile set, falling back to 1 default profile: "default"
+2025-05-02 10:49:53 [restartedMain] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-05-02 10:49:53 [restartedMain] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 58 ms. Found 16 JPA repository interfaces.
+2025-05-02 10:49:53 [restartedMain] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-05-02 10:49:53 [restartedMain] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2025-05-02 10:49:53 [restartedMain] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2025-05-02 10:49:53 [restartedMain] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.39]
+2025-05-02 10:49:53 [restartedMain] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-05-02 10:49:53 [restartedMain] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 704 ms
+2025-05-02 10:49:53 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Starting...
+2025-05-02 10:49:53 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-2 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3fcc8d9d
+2025-05-02 10:49:53 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Start completed.
+2025-05-02 10:49:53 [restartedMain] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-05-02 10:49:53 [restartedMain] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-05-02 10:49:53 [restartedMain] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-05-02 10:49:53 [restartedMain] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-2)']
+	Database driver: undefined/unknown
+	Database version: 8.0.41
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-05-02 10:49:54 [restartedMain] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-05-02 10:49:54 [restartedMain] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-05-02 10:49:54 [restartedMain] WARN  org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-05-02 10:49:54 [restartedMain] WARN  org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2025-05-02 10:49:55 [restartedMain] INFO  org.springframework.boot.devtools.autoconfigure.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2025-05-02 10:49:55 [restartedMain] INFO  org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2025-05-02 10:49:55 [restartedMain] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2025-05-02 10:49:55 [restartedMain] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2025-05-02 10:49:55 [restartedMain] INFO  com.imperacred.BankLoanApplication.BankLoanApplication - Started BankLoanApplication in 2.374 seconds (process running for 103.608)
+2025-05-02 10:49:55 [restartedMain] INFO  org.springframework.boot.devtools.autoconfigure.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2025-05-02 11:07:22 [http-nio-8080-exec-2] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-05-02 11:07:22 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-05-02 11:07:22 [http-nio-8080-exec-2] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+2025-05-02 11:07:22 [http-nio-8080-exec-2] INFO  com.imperacred.BankLoanApplication.controller.AgentRegistrationLoginController - Received agent registration request for email: riya@gmail.com
+2025-05-02 11:07:22 [http-nio-8080-exec-2] INFO  com.imperacred.BankLoanApplication.service.impl.AgentRegistrationLoginServiceImpl - Starting agent registration for email: riya@gmail.com
+2025-05-02 11:07:23 [http-nio-8080-exec-2] DEBUG com.imperacred.BankLoanApplication.service.impl.AgentRegistrationLoginServiceImpl - Saved agent registration: com.imperacred.BankLoanApplication.model.AgentRegistration@3a10ace2
+2025-05-02 11:07:23 [http-nio-8080-exec-2] DEBUG com.imperacred.BankLoanApplication.service.impl.AgentRegistrationLoginServiceImpl - Saved agent login details for: riya@gmail.com
+2025-05-02 11:07:23 [http-nio-8080-exec-2] DEBUG com.imperacred.BankLoanApplication.service.impl.AgentRegistrationLoginServiceImpl - Saved basic agent info: riya@gmail.com
+2025-05-02 11:07:23 [http-nio-8080-exec-2] INFO  com.imperacred.BankLoanApplication.controller.AgentRegistrationLoginController - Agent registered successfully for email: riya@gmail.com
+2025-05-02 12:35:52 [File Watcher] INFO  org.springframework.boot.devtools.autoconfigure.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2025-05-02 12:35:52 [Thread-7] INFO  org.springframework.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2025-05-02 12:35:52 [tomcat-shutdown] INFO  org.apache.coyote.http11.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8080"]
+2025-05-02 12:35:52 [tomcat-shutdown] INFO  org.springframework.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2025-05-02 12:35:52 [Thread-7] INFO  org.apache.coyote.http11.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8080"]
+2025-05-02 12:35:52 [Thread-7] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-05-02 12:35:52 [Thread-7] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Shutdown initiated...
+2025-05-02 12:35:52 [Thread-7] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Shutdown completed.
+2025-05-02 12:36:46 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.2.Final
+2025-05-02 12:36:46 [restartedMain] INFO  com.imperacred.BankLoanApplication.BankLoanApplication - Starting BankLoanApplication using Java 21.0.6 with PID 15148 (C:\Users\Administrator\git\LOS-\target\classes started by Administrator in C:\Users\Administrator\git\LOS-)
+2025-05-02 12:36:46 [restartedMain] INFO  com.imperacred.BankLoanApplication.BankLoanApplication - No active profile set, falling back to 1 default profile: "default"
+2025-05-02 12:36:46 [restartedMain] INFO  org.springframework.boot.devtools.env.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-05-02 12:36:46 [restartedMain] INFO  org.springframework.boot.devtools.env.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-05-02 12:36:47 [restartedMain] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-05-02 12:36:47 [restartedMain] INFO  org.springframework.data.repository.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 97 ms. Found 16 JPA repository interfaces.
+2025-05-02 12:36:48 [restartedMain] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-05-02 12:36:48 [restartedMain] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2025-05-02 12:36:48 [restartedMain] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2025-05-02 12:36:48 [restartedMain] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.39]
+2025-05-02 12:36:48 [restartedMain] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-05-02 12:36:48 [restartedMain] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2100 ms
+2025-05-02 12:36:48 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-05-02 12:36:49 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@11418d8c
+2025-05-02 12:36:49 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-05-02 12:36:49 [restartedMain] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-05-02 12:36:49 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.11.Final
+2025-05-02 12:36:49 [restartedMain] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-05-02 12:36:49 [restartedMain] INFO  org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-05-02 12:36:49 [restartedMain] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.41
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-05-02 12:36:51 [restartedMain] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-05-02 12:36:51 [restartedMain] INFO  org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-05-02 12:36:51 [restartedMain] WARN  org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-05-02 12:36:52 [restartedMain] WARN  org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2025-05-02 12:36:52 [restartedMain] INFO  org.springframework.boot.devtools.autoconfigure.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2025-05-02 12:36:52 [restartedMain] INFO  org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2025-05-02 12:36:52 [restartedMain] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2025-05-02 12:36:52 [restartedMain] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2025-05-02 12:36:52 [restartedMain] INFO  com.imperacred.BankLoanApplication.BankLoanApplication - Started BankLoanApplication in 6.89 seconds (process running for 8.281)
+2025-05-02 12:36:53 [RMI TCP Connection(9)-127.0.0.1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-05-02 12:36:53 [RMI TCP Connection(9)-127.0.0.1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-05-02 12:36:53 [RMI TCP Connection(9)-127.0.0.1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2025-05-02 12:37:13 [http-nio-8080-exec-2] INFO  com.imperacred.BankLoanApplication.controller.AgentActivityLogController - Fetching activity logs for Agent ID = 4
+2025-05-02 12:37:13 [http-nio-8080-exec-2] INFO  com.imperacred.BankLoanApplication.service.impl.AgentActivityLogServiceImpl - Fetching activity logs for Agent ID: 4
+2025-05-02 12:37:13 [http-nio-8080-exec-2] INFO  com.imperacred.BankLoanApplication.service.impl.AgentActivityLogServiceImpl - Found 1 activity logs for Agent ID: 4
+2025-05-02 12:37:13 [http-nio-8080-exec-2] INFO  com.imperacred.BankLoanApplication.controller.AgentActivityLogController - Found 1 log(s) for Agent ID = 4

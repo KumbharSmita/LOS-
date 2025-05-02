@@ -101,7 +101,6 @@
 </dependency>
 
 
-
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter</artifactId>
@@ -113,10 +112,13 @@
     </exclusions>
 </dependency>
 
+<!-- Add Log4j2 dependencies -->
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-log4j2</artifactId>
 </dependency>
+
+
 
 
 <dependency>
