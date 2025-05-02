@@ -20,7 +20,7 @@ public class LoanApplicationsServiceImpl implements LoanApplicationsService {
 
     private LoanApplicationsDTO mapToDTO(LoanApplications app) {
         return LoanApplicationsDTO.builder()
-                .application_id(app.getApplication_id())
+                .applicationId(app.getApplicationId())
                 .leads_id(app.getLeads_id())
                 .loan_type(app.getLoan_type())
                 .amount(app.getAmount())
@@ -40,8 +40,8 @@ public class LoanApplicationsServiceImpl implements LoanApplicationsService {
                 .purpose(dto.getPurpose())
                 .status(dto.getStatus());
 
-        if (dto.getApplication_id() != null) {
-            builder.application_id(dto.getApplication_id());
+        if (dto.getApplicationId() != null) {
+            builder.applicationId(dto.getApplicationId());
         }
 
         return builder.build();

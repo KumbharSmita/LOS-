@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 	    @GeneratedValue(strategy = GenerationType.IDENTITY)
 	    private Integer emi_id;
 
-	    private Integer application_id;
+	    private Integer applicationId;
 	    private Integer schedule_id;
 	    private BigDecimal emi_amount;
 	    private LocalDate due_date;

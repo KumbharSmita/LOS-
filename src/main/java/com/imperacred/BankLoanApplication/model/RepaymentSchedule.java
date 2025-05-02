@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 @Data
@@ -30,6 +31,12 @@ public class RepaymentSchedule {
 
     @Column(name = "end_date")
     private LocalDate endDate;
+    
+    @Column(name="total_amount")
+    private BigDecimal totalAmount;
+    
+    @Column(name="total_interest")
+    private BigDecimal totalInterest;
 
     @Column(name = "created_at", updatable = false) 
     private LocalDateTime createdAt;

@@ -2,12 +2,12 @@ package com.imperacred.BankLoanApplication.service.impl;
 
 import com.imperacred.BankLoanApplication.model.LoanApplications;
 import com.imperacred.BankLoanApplication.model.RepaymentSchedule;
-import com.imperacred.BankLoanApplication.model.CreditScores;
+
 import com.imperacred.BankLoanApplication.model.Disbursements;
 import com.imperacred.BankLoanApplication.model.Emi;
 import com.imperacred.BankLoanApplication.repository.LoanApplicationsRepository;
 import com.imperacred.BankLoanApplication.repository.RepaymentScheduleRepository;
-import com.imperacred.BankLoanApplication.repository.CreditScoresRepository;
+
 import com.imperacred.BankLoanApplication.repository.DisbursementsRepository;
 import com.imperacred.BankLoanApplication.repository.EmiRepository;
 import com.imperacred.BankLoanApplication.service.LoanService;
@@ -27,8 +27,7 @@ public class LoanServiceImpl implements LoanService {
     @Autowired
     private LoanApplicationsRepository loanApplicationsRepository;
 
-    @Autowired
-    private CreditScoresRepository creditScoreRepository;
+    
 
     @Autowired
     private EmiRepository emiRepository;
@@ -41,16 +40,12 @@ public class LoanServiceImpl implements LoanService {
 
     
     @Override
-    public BigDecimal calculateDynamicInterestRate(int creditScore) {
-        BigDecimal baseInterestRate = new BigDecimal("12.00"); 
-        if (creditScore >= 750) {
-            return baseInterestRate.subtract(new BigDecimal("2.00")); 
-        } else if (creditScore >= 650) {
-            return baseInterestRate; 
-        } else {
-            return baseInterestRate.add(new BigDecimal("2.00")); 
+    public BigDecimal getBaseInterestRate() {
+       
+         
+            return new BigDecimal("12.00"); 
         }
-    }
+    
 
    
     @Override
@@ -67,26 +62,29 @@ public class LoanServiceImpl implements LoanService {
     }
 
     
-    @Override
-    public BigDecimal getCreditScoreForLoan(Integer applicationId) {
-        CreditScores creditScore = creditScoreRepository.findByApplicationId(applicationId)
-                .orElseThrow(() -> new RuntimeException("Credit score not found for application ID: " + applicationId));
-        
-        return new BigDecimal(creditScore.getScore());
-    }
+ 
+
     
     @Transactional
     @Override
-    public void createEMISchedule(LoanApplications loanApplication, BigDecimal emiAmount) {
+    public void createEMISchedule(LoanApplications loanApplication, BigDecimal emiAmount,Disbursements disbursements) {
         int totalInstallments = loanApplication.getTenure_months();
         LocalDate startDate = LocalDate.now().plusMonths(1); 
         LocalDate endDate = startDate.plusMonths(totalInstallments - 1);
 
         RepaymentSchedule repaymentSchedule = new RepaymentSchedule();
-        repaymentSchedule.setApplicationId(loanApplication.getApplication_id());
+        repaymentSchedule.setApplicationId(loanApplication.getApplicationId());
         repaymentSchedule.setTotalInstallments(totalInstallments);
         repaymentSchedule.setStartDate(startDate);
         repaymentSchedule.setEndDate(endDate);
+        
+        BigDecimal totalAmount=emiAmount.multiply(new BigDecimal(loanApplication.getTenure_months()));
+        
+        BigDecimal totalInterest=totalAmount.subtract(disbursements.getDisbursedAmount());
+        repaymentSchedule.setTotalAmount(totalAmount);
+        repaymentSchedule.setTotalInterest(totalInterest);
+        
+       
         repaymentSchedule.setCreatedAt(LocalDateTime.now());
         repaymentSchedule.setUpdatedAt(LocalDateTime.now());
 
@@ -94,11 +92,11 @@ public class LoanServiceImpl implements LoanService {
 
         int scheduleId = repaymentSchedule.getScheduleId();
 
-        BigDecimal monthlyEmiAmount = emiAmount;  // ✅ Fixed here
+        BigDecimal monthlyEmiAmount = emiAmount;  
 
         for (int i = 0; i < totalInstallments; i++) {
             Emi emi = new Emi();
-            emi.setApplication_id(loanApplication.getApplication_id());
+            emi.setApplicationId(loanApplication.getApplicationId());
             emi.setSchedule_id(scheduleId);  
             emi.setEmi_amount(monthlyEmiAmount);
             emi.setDue_date(startDate.plusMonths(i)); 
@@ -121,28 +119,27 @@ public class LoanServiceImpl implements LoanService {
     @Override
     public void processLoanApplication(LoanApplications loanApplication) {
 
-        BigDecimal creditScore = getCreditScoreForLoan(loanApplication.getApplication_id());
-
+      
        
-        BigDecimal dynamicInterestRate = calculateDynamicInterestRate(creditScore.intValue());
+       BigDecimal baseInterestRate=getBaseInterestRate();
 
     
-        Disbursements disbursement = disbursementRepository.findByApplicationId(loanApplication.getApplication_id())
-                .orElseThrow(() -> new RuntimeException("Disbursement not found for application ID: " + loanApplication.getApplication_id()));
+        Disbursements disbursement = disbursementRepository.findByApplicationId(loanApplication.getApplicationId())
+                .orElseThrow(() -> new RuntimeException("Disbursement not found for application ID: " + loanApplication.getApplicationId()));
 
         BigDecimal principal = disbursement.getDisbursedAmount();
 
 
-        BigDecimal emiAmount = calculateEMI(principal, loanApplication.getTenure_months(), dynamicInterestRate);
+        BigDecimal emiAmount = calculateEMI(principal, loanApplication.getTenure_months(), baseInterestRate);
 
      
-        createEMISchedule(loanApplication, emiAmount);
+        createEMISchedule(loanApplication, emiAmount , disbursement);
     }
 
 
-//	@Override
-//	public List<Emi> getEmisByApplicationId(Integer applicationId) {
-//		 return emiRepository.findByApplication_id(applicationId);
-//	}
+	@Override
+	public List<Emi> getEmisByApplicationId(Integer applicationId) {
+		 return emiRepository.findByApplicationId(applicationId);
+	}
 
 }

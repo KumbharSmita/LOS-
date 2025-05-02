@@ -42,12 +42,12 @@ public class LoanController {
         return ResponseEntity.ok("Loan processed and EMI schedule created successfully.");
     }
     
-//    @GetMapping("/emi-schedule/{applicationId}")
-//    public ResponseEntity<List<Emi>> getEmiSchedule(@PathVariable Integer applicationId) {
-//        List<Emi> emis = emiRepository.findByApplication_id(applicationId);
-//        if (emis.isEmpty()) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        return ResponseEntity.ok(emis);
-//    }
+   @GetMapping("/emi-schedule/{applicationId}")
+    public ResponseEntity<List<Emi>> getEmiSchedule(@PathVariable Integer applicationId) {
+        List<Emi> emis = emiRepository.findByApplicationId(applicationId);
+        if (emis.isEmpty()) {
+           return ResponseEntity.notFound().build();
+        }
+      return ResponseEntity.ok(emis);
+  }
 }

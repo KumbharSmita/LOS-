@@ -28,10 +28,7 @@ public class DisbursementsServiceImpl implements DisbursementsService {
     @Autowired
     private DisbursementsRepository disbursementsRepository;
     
-    @Autowired
-
-    private RepaymentScheduleRepository repaymentScheduleRepository;
-    
+ 
 
     private static final BigDecimal PROCESSING_FEE_PERCENTAGE = new BigDecimal("0.02");
 
@@ -76,21 +73,7 @@ public class DisbursementsServiceImpl implements DisbursementsService {
         disbursementsDTO.setStatus(disbursements.getStatus());
 
         
-        // Repayments Schedule after disbursement
-        int totalInstallments = loanApplications.getTenure_months();
-        LocalDate startDate = LocalDate.now().plusMonths(1); //  start date of EMI is next month
-        LocalDate endDate = startDate.plusMonths(totalInstallments - 1);
-
-        RepaymentSchedule repaymentSchedule = new RepaymentSchedule();
-        repaymentSchedule.setApplicationId(loanApplications.getApplication_id());
-        repaymentSchedule.setTotalInstallments(totalInstallments);
-        repaymentSchedule.setStartDate(startDate);
-        repaymentSchedule.setEndDate(endDate);
-        repaymentSchedule.setCreatedAt(LocalDateTime.now());
-        repaymentSchedule.setUpdatedAt(LocalDateTime.now());
-
-        repaymentScheduleRepository.save(repaymentSchedule);
-       
+        
         return disbursementsDTO;
     }
 

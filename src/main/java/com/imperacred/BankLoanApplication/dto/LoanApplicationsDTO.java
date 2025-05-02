@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoanApplicationsDTO {
-    private Integer application_id;
+    private Integer applicationId;
     private Integer leads_id;
     private String loan_type;
     private Double amount;

@@ -9,6 +9,7 @@ import com.imperacred.BankLoanApplication.model.Emi;
 public interface EmiRepository extends JpaRepository<Emi,Integer>{
 
 	
+	List<Emi> findByApplicationId(Integer applicationId);
 
-//	List<Emi> findByApplication_id(Integer applicationId);
+	
 }
