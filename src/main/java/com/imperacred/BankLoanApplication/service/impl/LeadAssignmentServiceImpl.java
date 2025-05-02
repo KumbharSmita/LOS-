@@ -1,9 +1,9 @@
 package com.imperacred.BankLoanApplication.service.impl;
 
-
-
 import java.time.LocalDateTime;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +21,8 @@ import jakarta.transaction.Transactional;
 @Service
 public class LeadAssignmentServiceImpl implements LeadAssignmentService {
 
-   
+    private static final Logger logger = LogManager.getLogger(LeadAssignmentServiceImpl.class);
+
     @Autowired
     private LeadsRepository leadsRepo;
 
@@ -33,44 +34,46 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
         this.agentLoadsRepo = agentLoadsRepo;
         this.leadAssignmentRepo = leadAssignmentRepo;
     }
+
     @Transactional
     @Override
     public LeadAssignmentResponseDTO assignLeadToAgent(int leads_id) {
-      
+        logger.info("Starting lead assignment for lead ID: {}", leads_id);
+
         Leads lead = leadsRepo.findById(leads_id)
-                .orElseThrow(() -> new RuntimeException("Lead not found"));
+                .orElseThrow(() -> {
+                    logger.error("Lead not found with ID: {}", leads_id);
+                    return new RuntimeException("Lead not found");
+                });
+        logger.debug("Found lead: {}", lead.getFull_name()); 
 
-        
         AgentLoads agentLoads = agentLoadsRepo.findFirstByOrderByLeadCountAscLastAssignedAsc()
-                .orElseThrow(() -> new RuntimeException("No agents available"));
+                .orElseThrow(() -> {
+                    logger.error("No available agents for lead assignment");
+                    return new RuntimeException("No agents available");
+                });
+        logger.debug("Assigning lead to agent ID: {}", agentLoads.getAgent_id());
 
-        
+        // Update agent load
         agentLoads.setLeadCount(agentLoads.getLeadCount() + 1);
         agentLoads.setLastAssigned(LocalDateTime.now());
         agentLoadsRepo.save(agentLoads);
+        logger.info("Updated agent load for agent ID: {}", agentLoads.getAgent_id());
 
-
-       
+        // Create new lead assignment
         LeadAssignments assignment = new LeadAssignments();
-        
         assignment.setLeads_id(leads_id);
         assignment.setAgent_id(agentLoads.getAgent_id());
         assignment.setAssigned_at(LocalDateTime.now());
         assignment.setStatus("ASSIGNED");
         leadAssignmentRepo.save(assignment);
-        System.out.println(assignment);
+        logger.info("Lead assigned: Lead ID {} -> Agent ID {}", leads_id, agentLoads.getAgent_id());
 
-       
-		
-		 
-
-       
         return new LeadAssignmentResponseDTO(
-        	    leads_id,  
-        	    agentLoads.getAgent_id(),  
-        	    assignment.getAssigned_at(),
-        	    assignment.getStatus()
-        	);
-
+                leads_id,
+                agentLoads.getAgent_id(),
+                assignment.getAssigned_at(),
+                assignment.getStatus()
+        );
     }
 }
