@@ -1,41 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" monitorInterval="30">
+<Configuration status="debug" monitorInterval="30">
     <Properties>
         <Property name="logPath">C:/log</Property>
         <Property name="logPattern">%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Property>
     </Properties>
 
     <Appenders>
-     
-        <RollingFile name="DailyRollingFile" fileName="${logPath}/personalloan.log"
-                     filePattern="${logPath}/personalloan-%d{yyyy-MM-dd}.log">
+        <!-- Rolling file appender for daily logs -->
+        <RollingFile name="DailyRollingFile" fileName="${logPath}/personalloan.log" filePattern="${logPath}/%d{yyyy-MM-dd}.log">
             <PatternLayout pattern="${logPattern}" />
             <Policies>
+                <!-- Trigger rollover every day at midnight -->
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- Optional size-based rollover: when log file exceeds 50MB -->
                 <SizeBasedTriggeringPolicy size="50MB"/>
             </Policies>
         </RollingFile>
 
-     
+        <!-- Console appender for real-time logs -->
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="${logPattern}" />
         </Console>
     </Appenders>
 
     <Loggers>
-      
+        <!-- Logger for com.imperacred package with DEBUG level -->
         <Logger name="com.imperacred" level="debug" additivity="false">
             <AppenderRef ref="DailyRollingFile"/>
             <AppenderRef ref="Console"/>
         </Logger>
 
-        
+        <!-- Logger for error-specific logs -->
         <Logger name="com.imperacred.error" level="error" additivity="false">
             <AppenderRef ref="DailyRollingFile"/>
             <AppenderRef ref="Console"/>
         </Logger>
 
-       
+        <!-- Disable logging for unnecessary packages like Spring, Tomcat, etc. -->
         <Logger name="org.apache.catalina" level="off"/>
         <Logger name="org.apache.coyote" level="off"/>
         <Logger name="org.apache.tomcat" level="off"/>
@@ -50,7 +51,7 @@
         <Logger name="org.springframework.context" level="off"/>
         <Logger name="org.springframework.jdbc" level="off"/>
 
-       
+        <!-- Root logger with INFO level (change to DEBUG for testing) -->
         <Root level="info">
             <AppenderRef ref="DailyRollingFile"/>
             <AppenderRef ref="Console"/>
