@@ -20,7 +20,7 @@ import java.util.Random;
 @Service
 public class OtpServiceImpl implements OtpService {
 
-    private static final long OTP_EXPIRATION_MINUTES = 5;
+    private static final long OTP_EXPIRATION_SECONDS = 90;
 
     @Autowired
     private LeadsRepository leadsRepository;
@@ -34,7 +34,7 @@ public class OtpServiceImpl implements OtpService {
     @Override
     public OtpDTO generateOtp(OtpRequest request) {
         String otpValue = String.valueOf(new Random().nextInt(900000) + 100000);// it can generates 6 digit otp
-        Timestamp expiryTime = Timestamp.valueOf(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
+        Timestamp expiryTime = Timestamp.valueOf(LocalDateTime.now().plusSeconds(OTP_EXPIRATION_SECONDS));
 
         Leads lead = leadsRepository.findById(request.getLeads_id()) // fetch the lead by id
                 .orElseThrow(() -> new RuntimeException("Lead not found with ID: " + request.getLeads_id()));

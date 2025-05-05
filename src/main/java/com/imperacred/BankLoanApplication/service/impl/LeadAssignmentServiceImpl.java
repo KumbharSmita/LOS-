@@ -60,12 +60,7 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
         leadAssignmentRepo.save(assignment);
         System.out.println(assignment);
 
-       
-		
-		 
-
-       
-        return new LeadAssignmentResponseDTO(
+      return new LeadAssignmentResponseDTO(
         	    leads_id,  
         	    agentLoads.getAgent_id(),  
         	    assignment.getAssigned_at(),

@@ -1,5 +1,9 @@
 package com.imperacred.BankLoanApplication.repository;
 
-public interface UnderwritingResultsRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.imperacred.BankLoanApplication.model.UnderwritingResults;
+
+public interface UnderwritingResultsRepository extends JpaRepository<UnderwritingResults, Integer> {
 }
+
