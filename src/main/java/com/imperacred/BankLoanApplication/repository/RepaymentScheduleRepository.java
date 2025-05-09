@@ -11,9 +11,10 @@ import com.imperacred.BankLoanApplication.model.RepaymentSchedule;
 
 public interface RepaymentScheduleRepository extends JpaRepository<RepaymentSchedule,Integer> {
 
-	Optional findByApplicationId(Integer applicationId);
+	Optional findByLeadsId(Integer leadsId);
 
 
 	
 
 }
+

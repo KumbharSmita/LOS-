@@ -44,7 +44,14 @@ public class AgentRegistrationLoginServiceImpl implements AgentRegistrationLogin
     	
     	 logger.info("Starting agent registration for email: {}", dto.getEmail());
 
-    	
+    	 if (agentRegistrationRepository.existsByEmail(dto.getEmail())) {
+    	        throw new RuntimeException("Email is already registered.");
+    	    }
+
+    	    // Check if contact number already exists
+    	    if (agentRegistrationRepository.existsByContactno(dto.getContactno())) {
+    	        throw new RuntimeException("Contact number is already registered.");
+    	    }
         // Register agent in the agent_registration table
         AgentRegistration agent = new AgentRegistration();
         agent.setFullName(dto.getFull_name());

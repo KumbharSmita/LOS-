@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DocumentsDTO {
     private Integer document_id;
-    private Integer application_id;
+    private Integer leads_id;
     private String document_type;
     private String file_path;
     private LocalDateTime uploaded_at;

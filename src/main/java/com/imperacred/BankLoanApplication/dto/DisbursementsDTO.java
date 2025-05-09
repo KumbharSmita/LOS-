@@ -12,10 +12,11 @@ import lombok.NoArgsConstructor;
 public class DisbursementsDTO {
 
 	
-	    private int applicationId;
-	    private BigDecimal disbursedAmount;
+	    private Integer leadsId;
+	    private BigDecimal approvedAmount;
+	    private BigDecimal rateOfInterest;
 	    private BigDecimal processingFee;
-	    private BigDecimal actualAmountCredited;
+	    private BigDecimal disbursedAmount;
 	    private String bankAccount;
 	    private String utrNumber;
 	    private LocalDateTime disbursedAt;

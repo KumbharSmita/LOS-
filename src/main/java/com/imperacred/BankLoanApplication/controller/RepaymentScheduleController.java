@@ -22,14 +22,14 @@ public class RepaymentScheduleController {
     private RepaymentScheduleRepository repaymentScheduleRepository;
 
   
-    @GetMapping("/{applicationId}")
-    public ResponseEntity<?> getRepaymentSchedule(@PathVariable Integer applicationId) {
-        Optional repaymentSchedules = repaymentScheduleRepository.findByApplicationId(applicationId);
+    @GetMapping("/{leadsId}")
+    public ResponseEntity<?> getRepaymentSchedule(@PathVariable Integer leadsId) {
+        Optional repaymentSchedules = repaymentScheduleRepository.findByLeadsId(leadsId);
 
       
         if (repaymentSchedules.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Repayment schedule not found for application ID: " + applicationId);
+                    .body("Repayment schedule not found for lead ID: " + leadsId);
         }
 
         return ResponseEntity.ok(repaymentSchedules); 

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,8 +22,8 @@ import lombok.NoArgsConstructor;
 	    @Id
 	    @GeneratedValue(strategy = GenerationType.IDENTITY)
 	    private Integer emi_id;
-
-	    private Integer applicationId;
+        @Column(name="leads_id")
+	    private Integer leadsId;
 	    private Integer schedule_id;
 	    private BigDecimal emi_amount;
 	    private LocalDate due_date;

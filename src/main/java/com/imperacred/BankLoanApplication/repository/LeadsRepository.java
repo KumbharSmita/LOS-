@@ -1,16 +1,33 @@
 package com.imperacred.BankLoanApplication.repository;
 
+import com.imperacred.BankLoanApplication.model.Lead;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+@Repository
+public interface LeadsRepository extends JpaRepository<Lead, Integer> {
 
-import com.imperacred.BankLoanApplication.dto.LeadsDTO;
-import com.imperacred.BankLoanApplication.model.Leads;
-//import com.imperacred.BankLoanApplication.model.Leads;
+    // Find a lead by email address
+    Optional<Lead> findByEmail(String email);
 
-public interface LeadsRepository extends JpaRepository<Leads, Integer> {
-	
-	Optional<Leads> findById(Integer id);
+    // Find a lead by phone number
+    Optional<Lead> findByPhone(String phone);
 
-	
+    // Find a lead by Aadhaar number
+    Optional<Lead> findByAadhaarNumber(String aadhaarNumber);
+
+    // Find a lead by PAN number
+    Optional<Lead> findByPanNumber(String panNumber);
+
+    // Check if any lead exists with same email, phone, Aadhaar, or PAN
+    boolean existsByEmailOrPhoneOrAadhaarNumberOrPanNumber(String email, String phone, String aadhaarNumber, String panNumber);
+
+    // Get the maximum leadsId for generating displayId (if needed)
+    @Query("SELECT MAX(l.leadsId) FROM Lead l")
+    Integer findMaxLeadsId();
+
+	Optional<Lead> findById(Integer leadsId);
 }

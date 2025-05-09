@@ -13,8 +13,7 @@ import java.util.List;
 public class DocumentsController {
 
     @Autowired
-    private DocumentsService documentsService;  // Updated to 'documentsService'
-
+    private DocumentsService documentsService;  
     @PostMapping
     public DocumentsDTO create(@RequestBody DocumentsDTO dto) {
         return documentsService.createDocument(dto);

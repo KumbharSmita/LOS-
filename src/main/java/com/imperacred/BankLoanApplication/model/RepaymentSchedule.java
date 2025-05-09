@@ -20,8 +20,8 @@ public class RepaymentSchedule {
     @Column(name = "schedule_id")
     private Integer scheduleId;
 
-    @Column(name = "application_id")
-    private Integer applicationId;
+    @Column(name = "leads_id")
+    private Integer leadsId;
 
     @Column(name = "total_installments")
     private Integer totalInstallments;

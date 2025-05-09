@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.imperacred.BankLoanApplication.dto.LeadAssignmentResponseDTO;
 import com.imperacred.BankLoanApplication.model.AgentLoads;
+import com.imperacred.BankLoanApplication.model.Lead;
 import com.imperacred.BankLoanApplication.model.LeadAssignments;
-import com.imperacred.BankLoanApplication.model.Leads;
 import com.imperacred.BankLoanApplication.repository.AgentLoadsRepository;
 import com.imperacred.BankLoanApplication.repository.LeadAssignmentRepository;
 import com.imperacred.BankLoanApplication.repository.LeadsRepository;
@@ -37,15 +37,15 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
 
     @Transactional
     @Override
-    public LeadAssignmentResponseDTO assignLeadToAgent(int leads_id) {
+    public LeadAssignmentResponseDTO assignLeadToAgent(Integer leads_id) {
         logger.info("Starting lead assignment for lead ID: {}", leads_id);
 
-        Leads lead = leadsRepo.findById(leads_id)
+        Lead lead = leadsRepo.findById(leads_id)
                 .orElseThrow(() -> {
                     logger.error("Lead not found with ID: {}", leads_id);
                     return new RuntimeException("Lead not found");
                 });
-        logger.debug("Found lead: {}", lead.getFull_name()); 
+        logger.debug("Found lead: {}", lead.getFirstName()); 
 
         AgentLoads agentLoads = agentLoadsRepo.findFirstByOrderByLeadCountAscLastAssignedAsc()
                 .orElseThrow(() -> {

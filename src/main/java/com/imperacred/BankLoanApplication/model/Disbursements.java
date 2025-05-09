@@ -27,17 +27,20 @@ public class Disbursements {
 	    @Column(name = "disbursements_id") 
 	    private int disbursementsId;
 
-	    @Column(name = "application_id") 
-	    private int applicationId;
+	    @Column(name = "leads_id") 
+	    private Integer leadsId;
 
-	    @Column(name = "disbursed_amount") 
-	    private BigDecimal disbursedAmount;
+	    @Column(name = "approved_amount") 
+	    private BigDecimal approvedAmount;
 
+	    @Column(name="rate_of_interest")
+	    private BigDecimal rateOfInterest;
+	    
 	    @Column(name = "processing_fee") 
 	    private BigDecimal processingFee;
 
-	    @Column(name = "actual_amount_credited") 
-	    private BigDecimal actualAmountCredited;
+	    @Column(name = "disbursed_amount") 
+	    private BigDecimal disbursedAmount;
 
 	    @Column(name = "bank_account") 
 	    private String bankAccount;

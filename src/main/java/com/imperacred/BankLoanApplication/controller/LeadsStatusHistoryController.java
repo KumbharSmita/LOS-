@@ -33,7 +33,7 @@ public class LeadsStatusHistoryController {
     }
 
     @GetMapping("/lead/{leads_id}")
-    public ResponseEntity<List<LeadStatusHistoryDTO>> getLeadStatusHistory(@PathVariable int leads_id) {
+    public ResponseEntity<List<LeadStatusHistoryDTO>> getLeadStatusHistory(@PathVariable Integer leads_id) {
         logger.info("Fetching status history for Lead ID: {}", leads_id);
 
         List<LeadStatusHistoryDTO> historyList = leadStatusHistoryService.getLeadStatusHistory(leads_id);

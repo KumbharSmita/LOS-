@@ -1,27 +1,38 @@
 package com.imperacred.BankLoanApplication.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import lombok.*;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
-@Table(name="credit_scores")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "credit_scores")
 public class CreditScores {
-	
-	@Id	
-	private Integer id;
-	@Column(name="application_id")
-	private Integer applicationId;
-	private String bereau;
-	private Integer score;
-	private LocalDateTime fatched_at;
-	
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @NotNull(message = "Leads ID cannot be null")  
+    @Column(name = "leads_id", nullable = false)
+    private Integer leadsId;
+
+    @NotBlank(message = "Bureau cannot be blank")
+    @Column(name = "bureau", length = 255)
+    private String bureau;
+
+    @Min(value = 300, message = "Score must be >= 300")
+    @Max(value = 900, message = "Score must be <= 900")
+    @Column(name = "score")
+    private int score;
+
+    @NotBlank(message = "Risk category cannot be blank")
+    @Column(name = "risk")
+    private String risk;
+
+    @Column(name = "fetched_at")
+    private LocalDateTime fetchedAt;
 }

@@ -8,7 +8,12 @@ import com.imperacred.BankLoanApplication.model.Disbursements;
 
 public interface DisbursementsRepository extends JpaRepository<Disbursements,Integer> {
 
-	Optional<Disbursements> findByApplicationId(int applicationId);
+	Optional<Disbursements> findByLeadsId(Integer leadsId);
+
+	boolean existsByLeadsId(Integer leadsId);
+
+	boolean existsByBankAccount(String bankAccount);
 
 	
 }
+

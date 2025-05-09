@@ -5,30 +5,16 @@ import java.util.List;
 
 import com.imperacred.BankLoanApplication.model.Disbursements;
 import com.imperacred.BankLoanApplication.model.Emi;
-import com.imperacred.BankLoanApplication.model.LoanApplications;
+import com.imperacred.BankLoanApplication.model.Lead;
 
 public interface LoanService {
-   
-    
-   
-    BigDecimal calculateEMI(BigDecimal principal, int tenureMonths, BigDecimal annualInterestRate);
 
-   
-    
-    
-    void createEMISchedule(LoanApplications loanApplication, BigDecimal emiAmount,Disbursements disbursements);
+	BigDecimal calculateEMI(BigDecimal principal, int tenureMonths, BigDecimal annualInterestRate);
 
-  
-    void processLoanApplication(LoanApplications loanApplication);
-    
-    
-    List<Emi> getEmisByApplicationId(Integer applicationId);
+	void createEMISchedule(Lead leads, BigDecimal emiAmount, Disbursements disbursements);
 
+	void processLoanApplication(Lead lead);
 
-	BigDecimal getBaseInterestRate();
+	List<Emi> getEmisByLeadsId(Integer leadsId);
 
-
-
-
-	
 }

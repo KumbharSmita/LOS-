@@ -27,10 +27,6 @@ public class LeadStatusHistoryServiceImpl implements LeadStatusHistoryService {
                 dto.getLeads_id(), dto.getAgent_id(), dto.getStatus());
 
         LeadsStatusHistory entity = new LeadsStatusHistory(
-                dto.getHistory_id(),
-                dto.getLeads_id(),
-                dto.getAgent_id(),
-                dto.getStatus()
         );
 
         LeadsStatusHistory savedEntity = leadStatusHistoryRepository.save(entity);
@@ -47,7 +43,7 @@ public class LeadStatusHistoryServiceImpl implements LeadStatusHistoryService {
     }
 
     @Override
-    public List<LeadStatusHistoryDTO> getLeadStatusHistory(int leads_id) {
+    public List<LeadStatusHistoryDTO> getLeadStatusHistory(Integer leads_id) {
         logger.info("Fetching status history for Lead ID: {}", leads_id);
 
         List<LeadsStatusHistory> historyList = leadStatusHistoryRepository.findByLeadsId(leads_id);

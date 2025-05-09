@@ -20,7 +20,7 @@ public class DocumentsServiceImpl implements DocumentsService {
     private Documents toEntity(DocumentsDTO dto) {
         return Documents.builder()
                 .document_id(dto.getDocument_id())
-                .application_id(dto.getApplication_id())
+                .leadsId(dto.getLeads_id())
                 .document_type(dto.getDocument_type())
                 .file_path(dto.getFile_path())
                 .uploaded_at(dto.getUploaded_at())
@@ -30,7 +30,7 @@ public class DocumentsServiceImpl implements DocumentsService {
     private DocumentsDTO toDTO(Documents document) {
         return DocumentsDTO.builder()
                 .document_id(document.getDocument_id())
-                .application_id(document.getApplication_id())
+                .leads_id(document.getLeadsId())
                 .document_type(document.getDocument_type())
                 .file_path(document.getFile_path())
                 .uploaded_at(document.getUploaded_at())
