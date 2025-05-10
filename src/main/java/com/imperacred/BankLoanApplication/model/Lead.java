@@ -12,6 +12,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -70,6 +72,15 @@ public class Lead {
 
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
+    
+    @Column(name="credit_score")
+    private Integer creditScore; 
+    
+    @Column(name="confirmed_amount")
+    private BigDecimal confirmedAmount;
+    
+    @Column(name="confirmed_tenure_months")
+    private Integer confirmedTenureMonths;
 
     // PrePersist annotation to set createdAt before saving a new entity
     @PrePersist

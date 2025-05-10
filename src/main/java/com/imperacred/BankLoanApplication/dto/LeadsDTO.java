@@ -28,31 +28,6 @@ public class LeadsDTO {
 	    private Double amount;
 	    private Integer tenureMonths;
 	    private String purpose;
+	    
 }
 
-//    @NotEmpty
-//    private String firstName;
-//
-//    @NotEmpty
-//    private String lastName;
-//
-//    @Email
-//    @NotEmpty
-//    private String email;
-//
-//    @NotEmpty
-//    private String phone;
-//
-//    @NotEmpty
-//    private String panNumber;
-//
-//    @NotEmpty
-//    private String aadhaarNumber;
-//
-//    private String source;
-//    private String loanType;
-//    private Double amount;
-//    private Integer tenureMonths;
-//    private String purpose;
-//
-//}
