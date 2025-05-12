@@ -1,6 +1,5 @@
 package com.imperacred.BankLoanApplication.service.impl;
 
-
 import com.imperacred.BankLoanApplication.model.RepaymentSchedule;
 import com.imperacred.BankLoanApplication.dto.DisbursementsDTO;
 import com.imperacred.BankLoanApplication.model.Disbursements;
@@ -11,8 +10,10 @@ import com.imperacred.BankLoanApplication.repository.DisbursementsRepository;
 import com.imperacred.BankLoanApplication.repository.EmiRepository;
 import com.imperacred.BankLoanApplication.repository.LeadsRepository;
 import com.imperacred.BankLoanApplication.service.LoanService;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +41,6 @@ public class LoanServiceImpl implements LoanService {
     @Autowired
     private RepaymentScheduleRepository repaymentScheduleRepository;
 
-   
     @Override
     public BigDecimal calculateEMI(BigDecimal principal, int tenureMonths, BigDecimal annualInterestRate) {
         logger.debug("Calculating EMI for principal: {} for tenure: {} months with annual interest rate: {}",
@@ -49,7 +49,7 @@ public class LoanServiceImpl implements LoanService {
         BigDecimal monthlyInterestRate = annualInterestRate
                 .divide(BigDecimal.valueOf(12 * 100), 10, RoundingMode.HALF_UP);
 
-        // EMI Formula
+        // EMI formula
         BigDecimal emiAmount = principal.multiply(monthlyInterestRate)
                 .multiply(BigDecimal.ONE.add(monthlyInterestRate).pow(tenureMonths))
                 .divide(BigDecimal.ONE.add(monthlyInterestRate).pow(tenureMonths).subtract(BigDecimal.ONE), 2, RoundingMode.HALF_UP);
@@ -63,7 +63,12 @@ public class LoanServiceImpl implements LoanService {
     public void createEMISchedule(Lead lead, BigDecimal emiAmount, Disbursements disbursements) {
         logger.info("Creating EMI schedule for lead ID: {}", lead.getLeadsId());
 
-        int totalInstallments = lead.getTenureMonths();
+        Integer confirmedTenure = lead.getConfirmedTenureMonths();
+        if (confirmedTenure == null || confirmedTenure <= 0) {
+            throw new IllegalArgumentException("Confirmed tenure must be a positive number.");
+        }
+
+        int totalInstallments = confirmedTenure;
         LocalDate startDate = LocalDate.now().plusMonths(1);
         LocalDate endDate = startDate.plusMonths(totalInstallments - 1);
 
@@ -73,15 +78,14 @@ public class LoanServiceImpl implements LoanService {
         repaymentSchedule.setStartDate(startDate);
         repaymentSchedule.setEndDate(endDate);
 
-        BigDecimal totalAmount = emiAmount.multiply(new BigDecimal(lead.getTenureMonths()));
+        BigDecimal totalAmount = emiAmount.multiply(BigDecimal.valueOf(totalInstallments));
         BigDecimal totalInterest = totalAmount.subtract(disbursements.getApprovedAmount());
         repaymentSchedule.setTotalAmount(totalAmount);
         repaymentSchedule.setTotalInterest(totalInterest);
-
         repaymentSchedule.setCreatedAt(LocalDateTime.now());
         repaymentSchedule.setUpdatedAt(LocalDateTime.now());
 
-        repaymentScheduleRepository.save(repaymentSchedule); // Save the schedule
+        repaymentScheduleRepository.save(repaymentSchedule);
         logger.info("EMI schedule created with schedule ID: {}", repaymentSchedule.getScheduleId());
 
         int scheduleId = repaymentSchedule.getScheduleId();
@@ -92,7 +96,7 @@ public class LoanServiceImpl implements LoanService {
             emi.setEmi_amount(emiAmount);
             emi.setDue_date(startDate.plusMonths(i));
             emi.setPaid_date(null);
-            emi.setStatus("PENDING");
+            emi.setStatus("PENDING"); // You can replace with EmiStatus.PENDING.name() if using enum
             emi.setCreated_at(LocalDateTime.now());
             emi.setUpdated_at(LocalDateTime.now());
 
@@ -118,7 +122,12 @@ public class LoanServiceImpl implements LoanService {
             BigDecimal principal = disbursement.getApprovedAmount();
             logger.debug("Fetched disbursement amount for lead ID {}: {}", lead.getLeadsId(), principal);
 
-            BigDecimal emiAmount = calculateEMI(principal, lead.getTenureMonths(), baseInterestRate);
+            Integer confirmedTenure = lead.getConfirmedTenureMonths();
+            if (confirmedTenure == null || confirmedTenure <= 0) {
+                throw new IllegalArgumentException("Confirmed tenure must be a positive number.");
+            }
+
+            BigDecimal emiAmount = calculateEMI(principal, confirmedTenure, baseInterestRate);
 
             createEMISchedule(lead, emiAmount, disbursement);
             logger.info("Lead with ID: {} processed successfully.", lead.getLeadsId());

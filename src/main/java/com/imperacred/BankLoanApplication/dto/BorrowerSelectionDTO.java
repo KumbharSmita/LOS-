@@ -9,14 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UnderwritingResultsDTO {
-
-
-    private Integer leadsId;
-    private String riskRating;
-    private BigDecimal approvedAmount;
-    private String decision;
-    private String underwriterNotes;
-    private LocalDateTime evaluatedAt;
+public class BorrowerSelectionDTO {
+	 private BigDecimal confirmedAmount;
+	  private Integer confirmedTenureMonths;
 
 }
