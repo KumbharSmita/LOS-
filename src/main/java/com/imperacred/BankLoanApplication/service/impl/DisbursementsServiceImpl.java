@@ -15,7 +15,6 @@ import com.imperacred.BankLoanApplication.model.Disbursements;
 import com.imperacred.BankLoanApplication.model.Lead;
 import com.imperacred.BankLoanApplication.repository.DisbursementsRepository;
 import com.imperacred.BankLoanApplication.repository.LeadsRepository;
-
 import com.imperacred.BankLoanApplication.service.DisbursementsService;
 
 import jakarta.transaction.Transactional;
@@ -30,15 +29,14 @@ public class DisbursementsServiceImpl implements DisbursementsService {
 
     @Autowired
     private DisbursementsRepository disbursementsRepository;
-    
+
     private static final BigDecimal PROCESSING_FEE_PERCENTAGE = new BigDecimal("0.02");
 
     @Override
     @Transactional
     public DisbursementsDTO disburseLoan(DisbursementsDTO disbursementsDTO) {
         logger.info("Starting loan disbursement for applicationId: {}", disbursementsDTO.getLeadsId());
-        
-        
+
         // Check uniqueness of lead ID
         if (disbursementsRepository.existsByLeadsId(disbursementsDTO.getLeadsId())) {
             logger.error("Disbursement already exists for leadsId: {}", disbursementsDTO.getLeadsId());
@@ -50,51 +48,53 @@ public class DisbursementsServiceImpl implements DisbursementsService {
             logger.error("Bank account {} already used for another disbursement", disbursementsDTO.getBankAccount());
             throw new RuntimeException("Bank account already used.");
         }
-        
+
         // Fetch loan application
         Lead lead = leadsRepository.findById(disbursementsDTO.getLeadsId())
                 .orElseThrow(() -> {
-                    logger.error("Lead  with ID {} not found", disbursementsDTO.getLeadsId());
+                    logger.error("Lead with ID {} not found", disbursementsDTO.getLeadsId());
                     return new RuntimeException("Lead not found");
                 });
 
-        // Validate lead status
-        if (!lead.getStatus().equals("APPROVED")) {
-            logger.error("Lead {} is not approved, cannot proceed with disbursement", disbursementsDTO.getLeadsId());
-            throw new RuntimeException("Lead is not approved");
+        // Ensure the loan has been confirmed by the borrower
+        if (!"Confirmed by Borrower".equalsIgnoreCase(lead.getStatus())) {
+            logger.error("Lead {} is not confirmed by borrower", disbursementsDTO.getLeadsId());
+            throw new RuntimeException("Borrower has not confirmed loan selection.");
         }
 
-        // Calculate processing fee and actual amount credited
-        BigDecimal processingFee = disbursementsDTO.getApprovedAmount().multiply(PROCESSING_FEE_PERCENTAGE)
-                .setScale(2, RoundingMode.HALF_UP);  // 2% processing fee
-        BigDecimal disbursedAmount = disbursementsDTO.getApprovedAmount().subtract(processingFee);
+        // Ensure confirmed amount and tenure are set
+        if (lead.getConfirmedAmount() == null || lead.getConfirmedTenureMonths() == null) {
+            logger.error("Confirmed loan values not set for lead {}", disbursementsDTO.getLeadsId());
+            throw new RuntimeException("Confirmed amount or tenure missing.");
+        }
+
+        // Calculate processing fee and disbursed amount
+        BigDecimal confirmedAmount = lead.getConfirmedAmount();
+        BigDecimal processingFee = confirmedAmount.multiply(PROCESSING_FEE_PERCENTAGE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal disbursedAmount = confirmedAmount.subtract(processingFee);
 
         // Log fee calculation
-        logger.debug("Processing fee calculated: {} for disbursed amount: {}", processingFee, disbursementsDTO.getDisbursedAmount());
+        logger.debug("Processing fee: {}, Disbursed amount: {}", processingFee, disbursedAmount);
 
-        // Create Disbursement
+        // Create disbursement record
         Disbursements disbursements = new Disbursements();
         disbursements.setLeadsId(disbursementsDTO.getLeadsId());
-        disbursements.setApprovedAmount(disbursementsDTO.getApprovedAmount());
+        disbursements.setApprovedAmount(confirmedAmount);
         disbursements.setRateOfInterest(disbursementsDTO.getRateOfInterest());
         disbursements.setProcessingFee(processingFee);
         disbursements.setDisbursedAmount(disbursedAmount);
-        disbursements.setBankAccount(disbursementsDTO.getBankAccount());  // Bank account from DTO
+        disbursements.setBankAccount(disbursementsDTO.getBankAccount());
         disbursements.setUtrNumber(generateUtrNumber());
         disbursements.setDisbursedAt(LocalDateTime.now());
         disbursements.setStatus("SUCCESS");
 
-    
-        logger.debug("Creating disbursement with UTR number: {}", disbursements.getUtrNumber());
-
-        // Save Disbursement
+        // Save to database
         disbursements = disbursementsRepository.save(disbursements);
 
-        // Log disbursement saved successfully
-        logger.info("Loan disbursement completed successfully for applicationId: {} with UTR: {}",
-                disbursementsDTO.getLeadsId(), disbursements.getUtrNumber());
+        logger.info("Disbursement successful for lead {} with UTR {}", disbursements.getLeadsId(), disbursements.getUtrNumber());
 
-        // Set the details in the DTO to return
+        // Set response DTO
+        disbursementsDTO.setApprovedAmount(confirmedAmount);
         disbursementsDTO.setProcessingFee(processingFee);
         disbursementsDTO.setDisbursedAmount(disbursedAmount);
         disbursementsDTO.setUtrNumber(disbursements.getUtrNumber());
@@ -104,10 +104,9 @@ public class DisbursementsServiceImpl implements DisbursementsService {
         return disbursementsDTO;
     }
 
-    
     private String generateUtrNumber() {
-        String utrNumber = "UTR" + UUID.randomUUID().toString();
-        logger.debug("Generated unique UTR number: {}", utrNumber);
+        String utrNumber = "UTR" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
+        logger.debug("Generated UTR: {}", utrNumber);
         return utrNumber;
     }
 }
