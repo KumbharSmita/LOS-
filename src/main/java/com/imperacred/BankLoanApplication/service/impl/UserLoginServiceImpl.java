@@ -5,10 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.imperacred.BankLoanApplication.dto.UserLoginDTO;
-import com.imperacred.BankLoanApplication.model.UserLogin;
 import com.imperacred.BankLoanApplication.model.UserRegistration;
-import com.imperacred.BankLoanApplication.repository.UserLoginRepository;
 import com.imperacred.BankLoanApplication.repository.UserRegistrationRepository;
 import com.imperacred.BankLoanApplication.service.UserLoginService;
 
@@ -18,36 +15,31 @@ public class UserLoginServiceImpl implements UserLoginService {
     private static final Logger logger = LogManager.getLogger(UserLoginServiceImpl.class);
 
     @Autowired
-    private UserLoginRepository userLoginRepository;
-
-    @Autowired
     private UserRegistrationRepository userRegistrationRepository;
 
     @Override
-    public UserLogin saveUserLogin(UserLoginDTO dto) {
-        logger.info("Attempting to save user login for email: {}", dto.getEmail());
+    public UserRegistration validateUserLogin(String email, String password) {
+        logger.info("Attempting login for email: {}", email);
 
-        UserRegistration userRegistration = userRegistrationRepository
-            .findById(dto.getUser_registration_id())
-            .orElseThrow(() -> {
-                logger.error("UserRegistration not found with ID: {}", dto.getUser_registration_id());
-                return new RuntimeException("UserRegistration not found with ID: " + dto.getUser_registration_id());
-            });
+        UserRegistration user = userRegistrationRepository.findByEmail(email);
 
-        UserLogin userLogin = new UserLogin();
-        userLogin.setEmail(dto.getEmail());
-        userLogin.setPassword(dto.getPassword());
-//        userLogin.setUserRegistration(userRegistration);
+        if (user == null) {
+            logger.warn("Login failed: No user found with email: {}", email);
+            throw new RuntimeException("Invalid credentials");
+        }
 
-        UserLogin savedLogin = userLoginRepository.save(userLogin);
-        logger.info("User login saved successfully for email: {}", dto.getEmail());
+        if (!user.getPassword().equals(password)) {
+            logger.warn("Login failed: Password mismatch for email: {}", email);
+            throw new RuntimeException("Invalid credentials");
+        }
 
-        return savedLogin;
+        logger.info("Login successful for email: {}", email);
+        return user;
     }
-
+    
     @Override
-    public UserLogin getUserLoginByEmail(String email) {
-        logger.debug("Fetching user login by email: {}", email);
-        return userLoginRepository.findByEmail(email);
+    public UserRegistration getUserByEmail(String email) {
+        return userRegistrationRepository.findByEmail(email);
     }
+
 }

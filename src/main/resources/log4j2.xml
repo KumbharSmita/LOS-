@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="debug" monitorInterval="30">
+    
+    <!-- Global properties for log file location, pattern, and file name -->
     <Properties>
         <Property name="logPath">C:/log</Property>
         <Property name="logPattern">%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Property>
@@ -7,6 +9,7 @@
     </Properties>
 
     <Appenders>
+        <!-- Daily routing file appender (separates logs by date) -->
         <Routing name="DailyRoutingFile">
             <Routes pattern="$${date:yyyy-MM-dd}">
                 <Route>
@@ -17,22 +20,26 @@
             </Routes>
         </Routing>
 
+        <!-- Console appender to print logs to the terminal -->
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="${logPattern}" />
         </Console>
     </Appenders>
 
     <Loggers>
+        <!-- Application-specific logger (debug level) -->
         <Logger name="com.imperacred" level="debug" additivity="false">
             <AppenderRef ref="DailyRoutingFile"/>
             <AppenderRef ref="Console"/>
         </Logger>
 
+        <!-- Application error-specific logger (error level only) -->
         <Logger name="com.imperacred.error" level="error" additivity="false">
             <AppenderRef ref="DailyRoutingFile"/>
             <AppenderRef ref="Console"/>
         </Logger>
 
+        <!-- Suppress unnecessary logging from libraries -->
         <Logger name="org.apache.catalina" level="off"/>
         <Logger name="org.apache.coyote" level="off"/>
         <Logger name="org.apache.tomcat" level="off"/>
@@ -47,9 +54,11 @@
         <Logger name="org.springframework.context" level="off"/>
         <Logger name="org.springframework.jdbc" level="off"/>
 
+        <!-- Root logger configuration (info level) -->
         <Root level="info">
             <AppenderRef ref="DailyRoutingFile"/>
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
+
 </Configuration>

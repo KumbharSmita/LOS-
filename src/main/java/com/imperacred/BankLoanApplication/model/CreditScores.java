@@ -16,20 +16,18 @@ public class CreditScores {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotBlank(message = "Leads ID cannot be blank")
     @Column(name = "leads_id", nullable = false)
     private int leadsId;
 
-    @NotBlank(message = "Bureau cannot be blank")
+    
     @Column(name = "bureau", length = 255)
     private String bureau;
 
-    @Min(value = 300, message = "Score must be >= 300")
-    @Max(value = 900, message = "Score must be <= 900")
+    
     @Column(name = "score")
     private int score;
 
-    @NotBlank(message = "Risk category cannot be blank")
+   
     @Column(name = "risk")
     private String risk;
 

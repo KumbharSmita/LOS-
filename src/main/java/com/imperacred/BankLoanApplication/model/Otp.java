@@ -1,8 +1,7 @@
+
 package com.imperacred.BankLoanApplication.model;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,51 +9,63 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "otp")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "otp")
 public class Otp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "otp_id")
     private Integer otpId;
 
+    // Mapping Many-to-One relationship with Lead
     @ManyToOne
-    @JoinColumn(name = "leads_id", nullable = false, unique = true)
-    private Leads leads;
+    @JoinColumn(name = "leads_id")
+    private Lead lead;  // Instead of just leadsId, we use the full Lead object
 
-    @Column(name = "otp_value", length = 6)
+    @Column(name = "otp_value", nullable = false)
     private String otpValue;
 
-    @Column(name = "expiry_time")
-    private Timestamp expiryTime;
+    @Column(name = "expiry_time", nullable = false)
+    private LocalDateTime expiryTime;
 
-    @Column(name = "created_at", updatable = false)
-    private Timestamp createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private Timestamp updatedAt;
+    private LocalDateTime updatedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = Timestamp.valueOf(LocalDateTime.now());
-    }
 }
 
+
+
+//public class Otp {
+//
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Integer otpId;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "leads_id", referencedColumnName = "leads_id", nullable = false)
+//    private Leads lead;
+//
+//    @Column(name = "otp_value", nullable = false)
+//    private String otpValue;
+//
+//    @Column(name = "expiry_time", nullable = false)
+//    private LocalDateTime expiryTime;
+//
+//    @Column(name = "created_at")
+//    private LocalDateTime createdAt;
+//
+//    @Column(name = "updated_at")
+//    private LocalDateTime updatedAt;
+//
+//}

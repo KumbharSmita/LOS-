@@ -45,6 +45,18 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
     @Override
     public UserRegistrationDTO createUser(UserRegistrationDTO userDto) {
         logger.info("Creating user with email: {}", userDto.getEmail());
+
+        // ✅ Validation: Check for duplicate email and contact number
+        if (userRepo.existsByEmail(userDto.getEmail())) {
+            logger.warn("Email already exists: {}", userDto.getEmail());
+            throw new RuntimeException("Email already exists");
+        }
+
+        if (userRepo.existsByContactno(userDto.getContactno())) {
+            logger.warn("Contact number already exists: {}", userDto.getContactno());
+            throw new RuntimeException("Contact number already exists");
+        }
+
         UserRegistration user = convertToEntity(userDto);
         UserRegistration savedUser = userRepo.save(user);
         logger.info("User created successfully with ID: {}", savedUser.getUser_registration_id());
@@ -85,13 +97,26 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
             throw new RuntimeException("User not found");
         }
 
-        UserRegistration user = optional.get();
-        user.setFull_name(userDto.getFull_name());
-        user.setEmail(userDto.getEmail());
-        user.setPassword(userDto.getPassword());
-        user.setContactno(userDto.getContactno());
+        UserRegistration existingUser = optional.get();
 
-        UserRegistration updatedUser = userRepo.save(user);
+        // ✅ Validation: Check for duplicate email (other than current user)
+        if (!existingUser.getEmail().equals(userDto.getEmail()) &&
+                userRepo.existsByEmail(userDto.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        // ✅ Validation: Check for duplicate contact number (other than current user)
+        if (!existingUser.getContactno().equals(userDto.getContactno()) &&
+                userRepo.existsByContactno(userDto.getContactno())) {
+            throw new RuntimeException("Contact number already exists");
+        }
+
+        existingUser.setFull_name(userDto.getFull_name());
+        existingUser.setEmail(userDto.getEmail());
+        existingUser.setPassword(userDto.getPassword());
+        existingUser.setContactno(userDto.getContactno());
+
+        UserRegistration updatedUser = userRepo.save(existingUser);
         logger.info("User updated successfully with ID: {}", updatedUser.getUser_registration_id());
         return convertToDto(updatedUser);
     }

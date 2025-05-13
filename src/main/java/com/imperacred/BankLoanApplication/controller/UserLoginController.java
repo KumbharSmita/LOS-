@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.imperacred.BankLoanApplication.dto.UserLoginDTO;
-import com.imperacred.BankLoanApplication.model.UserLogin;
+import com.imperacred.BankLoanApplication.model.UserRegistration;
 import com.imperacred.BankLoanApplication.service.UserLoginService;
 
 @RestController
@@ -19,29 +19,31 @@ public class UserLoginController {
     @Autowired
     private UserLoginService userLoginService;
 
-    @PostMapping("/save")
-    public ResponseEntity<UserLogin> saveUserLogin(@RequestBody UserLoginDTO userLoginDTO) {
-        logger.info("Received request to save user login for email: {}", userLoginDTO.getEmail());
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserLoginDTO loginDTO) {
+        logger.info("Login attempt for email: {}", loginDTO.getEmail());
         try {
-            UserLogin savedUser = userLoginService.saveUserLogin(userLoginDTO);
-            logger.info("User login successfully saved for email: {}", savedUser.getEmail());
-            return ResponseEntity.ok(savedUser);
-        } catch (Exception e) {
-            logger.error("Error while saving user login: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+            UserRegistration user = userLoginService.validateUserLogin(loginDTO.getEmail(), loginDTO.getPassword());
+            return ResponseEntity.ok("Login successful for: " + user.getEmail());
+        } catch (RuntimeException e) {
+            logger.warn("Login failed: {}", e.getMessage());
+            return ResponseEntity.status(401).body("Invalid credentials");
         }
     }
-
+    
     @GetMapping("/get-by-email")
-    public ResponseEntity<UserLogin> getUserLoginByEmail(@RequestParam String email) {
-        logger.debug("Received request to fetch user login by email: {}", email);
-        UserLogin userLogin = userLoginService.getUserLoginByEmail(email);
-        if (userLogin != null) {
-            logger.info("User login found for email: {}", email);
-            return ResponseEntity.ok(userLogin);
-        } else {
-            logger.warn("User login not found for email: {}", email);
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> getUserByEmail(@RequestParam String email) {
+        logger.info("Fetching user registration by email: {}", email);
+        try {
+            UserRegistration user = userLoginService.getUserByEmail(email);
+            if (user != null) {
+                return ResponseEntity.ok(user);
+            } else {
+                return ResponseEntity.status(404).body("User not found");
+            }
+        } catch (Exception e) {
+            logger.error("Error fetching user by email: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body("Server error");
         }
     }
 }

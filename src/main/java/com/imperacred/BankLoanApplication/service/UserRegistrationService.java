@@ -9,4 +9,6 @@ public interface UserRegistrationService {
     List<UserRegistrationDTO> getAllUsers();
     UserRegistrationDTO updateUser(Integer id, UserRegistrationDTO userDto);
     void deleteUser(Integer id);
+    
+ 
 }
