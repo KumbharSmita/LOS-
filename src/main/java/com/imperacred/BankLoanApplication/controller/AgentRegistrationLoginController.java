@@ -23,6 +23,7 @@ public class AgentRegistrationLoginController {
 
     @Autowired
     private AgentRegistrationLoginService agentRegistrationLoginService;
+    @CrossOrigin(origins = "http://localhost:3000") 
 
     @PostMapping("/register")
     public ResponseEntity<AgentRegistration> registerAgent(@RequestBody AgentRegistrationDTO dto) {

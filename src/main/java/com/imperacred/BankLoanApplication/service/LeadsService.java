@@ -5,7 +5,7 @@ import com.imperacred.BankLoanApplication.dto.LeadsDTO;
 public interface LeadsService {
 
     // Method to create a lead and send OTP
-    void createLead(LeadsDTO leadDTO);
+    int createLead(LeadsDTO leadDTO);
 
     // Method to verify OTP for a given lead ID
     String verifyOtp(Integer leads_id, String otpValue);
@@ -13,3 +13,4 @@ public interface LeadsService {
     // Method to resend OTP for an existing lead
     String resendOtp(String email);
 }
+

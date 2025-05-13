@@ -5,15 +5,14 @@ import com.imperacred.BankLoanApplication.dto.OtpRequestDTO;
 import com.imperacred.BankLoanApplication.dto.OtpVerificationDTO;
 import com.imperacred.BankLoanApplication.service.LeadsService;
 import com.imperacred.BankLoanApplication.service.impl.OtpVerificationStatus;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/leads")
 public class LeadsController {
@@ -24,45 +23,62 @@ public class LeadsController {
     private LeadsService leadsService;
 
     @PostMapping("/create")
-    public ResponseEntity<String> createLead(@Valid @RequestBody LeadsDTO leadDTO) {
-        logger.info("Received request to create lead with email: {}", leadDTO.getEmail());
+    public ResponseEntity<?> createLead(@Valid @RequestBody LeadsDTO leadDTO) {
+        logger.info("Received Create Lead Request: {}", sanitizeLead(leadDTO));
+
         try {
-            leadsService.createLead(leadDTO);
-            logger.info("Lead created and OTP sent successfully for email: {}", leadDTO.getEmail());
-            return ResponseEntity.ok("Lead created and OTP sent successfully.");
+            int leadId = leadsService.createLead(leadDTO);
+            String response = "Lead created and OTP sent successfully.";
+            logger.info("Response: {} | leadsId: {}", response, leadId);
+            return ResponseEntity.ok().body("{\"leads_id\":" + leadId + ",\"message\":\"" + response + "\"}");
         } catch (Exception e) {
-            logger.error("Error while creating lead for email: {}", leadDTO.getEmail(), e);
-            return ResponseEntity.status(500).body("Failed to create lead or send OTP.");
+            logger.error("Error while creating lead: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("{\"error\":\"Failed to create lead or send OTP.\"}");
         }
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<String> verifyOtp(@Valid @RequestBody OtpVerificationDTO request) {
-        logger.info("Received OTP verification request for lead ID: {}", request.getLeads_id());
+    public ResponseEntity<?> verifyOtp(@Valid @RequestBody OtpVerificationDTO request) {
+        logger.info("Received OTP verification request: {}", request);
+
         try {
             String result = leadsService.verifyOtp(request.getLeads_id(), request.getOtp_value());
-            logger.info("OTP verification result for lead ID {}: {}", request.getLeads_id(), result);
-            if (result.equals(OtpVerificationStatus.SUCCESS.getMessage())) {
-                return ResponseEntity.ok("OTP verified successfully.");
+            logger.info("OTP verification result: {}", result);
+
+            if (OtpVerificationStatus.SUCCESS.getMessage().equals(result)) {
+                return ResponseEntity.ok("{\"message\":\"OTP verified successfully.\"}");
             } else {
-                return ResponseEntity.badRequest().body(result);
+                return ResponseEntity.badRequest().body("{\"message\":\"" + result + "\"}");
             }
         } catch (Exception e) {
-            logger.error("Error during OTP verification for lead ID: {}", request.getLeads_id(), e);
-            return ResponseEntity.status(500).body("Internal error during OTP verification.");
+            logger.error("Error verifying OTP: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("{\"error\":\"Internal error during OTP verification.\"}");
         }
     }
 
     @PostMapping("/resend-otp")
-    public ResponseEntity<String> resendOtp(@Valid @RequestBody OtpRequestDTO request) {
-        logger.info("Received request to resend OTP to email: {}", request.getEmail());
+    public ResponseEntity<?> resendOtp(@Valid @RequestBody OtpRequestDTO request) {
+        logger.info("Received OTP resend request: {}", request);
+
         try {
             String result = leadsService.resendOtp(request.getEmail());
-            logger.info("OTP resent successfully to email: {}", request.getEmail());
-            return ResponseEntity.ok(result);
+            logger.info("Resend OTP Result: {}", result);
+            return ResponseEntity.ok("{\"message\":\"" + result + "\"}");
         } catch (Exception e) {
-            logger.error("Error while resending OTP to email: {}", request.getEmail(), e);
-            return ResponseEntity.status(500).body("Failed to resend OTP.");
+            logger.error("Error resending OTP: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("{\"error\":\"Failed to resend OTP.\"}");
         }
+    }
+
+    // Mask sensitive info in logs
+    private LeadsDTO sanitizeLead(LeadsDTO lead) {
+        lead.setAadhaarNumber(mask(lead.getAadhaarNumber(), 4));
+        lead.setPanNumber(mask(lead.getPanNumber(), 2));
+        return lead;
+    }
+
+    private String mask(String value, int visibleDigits) {
+        if (value == null || value.length() <= visibleDigits) return "****";
+        return "*".repeat(value.length() - visibleDigits) + value.substring(value.length() - visibleDigits);
     }
 }
