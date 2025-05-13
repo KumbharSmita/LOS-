@@ -103,10 +103,16 @@ public class LeadsController {
     @GetMapping("/credit-score")
     public ResponseEntity<?> getCreditScore(@RequestParam String panNumber) {
         return leadRepository.findByPanNumber(panNumber)
-            .map(lead -> ResponseEntity.ok(Map.of(
-                    "panNumber", lead.getPanNumber(),
-                    "creditScore", lead.getCredit_score()
-            )))
+            .map(lead -> {
+                int score = lead.getCredit_score(); // use correct getter method
+                String eligibility = (score >= 700) ? "You are eligible" : "You are not eligible";
+
+                return ResponseEntity.ok(Map.of(
+                        "panNumber", lead.getPanNumber(),
+                        "creditScore", score,
+                        "eligibility", eligibility
+                ));
+            })
             .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Lead not found")));
     }
