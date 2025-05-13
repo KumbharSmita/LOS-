@@ -16,6 +16,7 @@ public class CreditScores {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+<<<<<<< HEAD
     @NotNull(message = "Leads ID cannot be null")  
     @Column(name = "leads_id", nullable = false)
     private Integer leadsId;
@@ -30,6 +31,20 @@ public class CreditScores {
     private int score;
 
     @NotBlank(message = "Risk category cannot be blank")
+=======
+    @Column(name = "leads_id", nullable = false)
+    private int leadsId;
+
+    
+    @Column(name = "bureau", length = 255)
+    private String bureau;
+
+    
+    @Column(name = "score")
+    private int score;
+
+   
+>>>>>>> origin/feature2
     @Column(name = "risk")
     private String risk;
 

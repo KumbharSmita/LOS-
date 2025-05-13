@@ -1,3 +1,4 @@
+
 package com.imperacred.BankLoanApplication.model;
 
 import java.time.LocalDateTime;
@@ -68,5 +69,8 @@ public class Otp {
 //    private LocalDateTime updatedAt;
 //
 //}
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> origin/feature2

@@ -1,5 +1,6 @@
 package com.imperacred.BankLoanApplication.service;
 
+<<<<<<< HEAD
 import com.imperacred.BankLoanApplication.dto.CreditScoresDTO;
 
 public interface CreditScoresService {
@@ -7,3 +8,9 @@ public interface CreditScoresService {
     CreditScoresDTO getCreditScoreById(int id);
 
 }
+=======
+
+public interface CreditScoresService {
+    int generateCreditScore(String panNumber);
+}
+>>>>>>> origin/feature2

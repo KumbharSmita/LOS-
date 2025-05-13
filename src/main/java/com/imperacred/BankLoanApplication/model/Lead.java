@@ -1,5 +1,9 @@
 package com.imperacred.BankLoanApplication.model;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/feature2
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,8 +16,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+<<<<<<< HEAD
 
 import java.math.BigDecimal;
+=======
+>>>>>>> origin/feature2
 import java.time.LocalDateTime;
 
 @Data
@@ -66,12 +73,19 @@ public class Lead {
 
     @Column(name = "status")
     private String status;
+<<<<<<< HEAD
+=======
+    
+    @Column(name = "credit_score")
+    private Integer credit_score;
+>>>>>>> origin/feature2
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
+<<<<<<< HEAD
     
     @Column(name="credit_score")
     private Integer creditScore; 
@@ -81,6 +95,8 @@ public class Lead {
     
     @Column(name="confirmed_tenure_months")
     private Integer confirmedTenureMonths;
+=======
+>>>>>>> origin/feature2
 
     // PrePersist annotation to set createdAt before saving a new entity
     @PrePersist

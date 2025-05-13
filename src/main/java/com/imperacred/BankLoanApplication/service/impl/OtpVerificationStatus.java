@@ -16,4 +16,8 @@ public enum OtpVerificationStatus {
     public String getMessage() {
         return message;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/feature2

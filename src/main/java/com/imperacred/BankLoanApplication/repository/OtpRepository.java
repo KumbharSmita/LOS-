@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/feature2
 package com.imperacred.BankLoanApplication.repository;
 
 import java.util.List;

@@ -16,6 +16,10 @@
 //    // Run every hour to clean up expired OTPs
 //    @Scheduled(fixedRate = 36000000)
 //    public void cleanupExpiredOtps() {
+<<<<<<< HEAD
 
+=======
+////        otpService.cleanupExpiredOtps();
+>>>>>>> origin/feature2
 //    }
 //}

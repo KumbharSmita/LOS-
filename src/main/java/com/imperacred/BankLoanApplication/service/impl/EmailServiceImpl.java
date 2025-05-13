@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/feature2
 package com.imperacred.BankLoanApplication.service.impl;
 
 import com.imperacred.BankLoanApplication.service.EmailService;
