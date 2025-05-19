@@ -87,7 +87,4 @@ A **Loan Origination System (LOS)** is a software platform designed to manage an
 * **FIS** and **Fiserv** (Enterprise-level platforms)
 * **Temenos** (Modular digital banking suite)
 * **Zest AI**, **Roostify**, **Blend** (Consumer-facing and AI-driven)
-
 ---
-
-
