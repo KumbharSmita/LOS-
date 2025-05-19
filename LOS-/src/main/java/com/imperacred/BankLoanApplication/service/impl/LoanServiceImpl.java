@@ -63,6 +63,16 @@ public class LoanServiceImpl implements LoanService {
     public void createEMISchedule(Lead lead, BigDecimal emiAmount, Disbursements disbursements) {
         logger.info("Creating EMI schedule for lead ID: {}", lead.getLeadsId());
 
+        if (lead == null) {
+            throw new IllegalArgumentException("Lead cannot be null.");
+        }
+        if (emiAmount == null || emiAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("EMI amount must be positive.");
+        }
+        if (disbursements == null) {
+            throw new IllegalArgumentException("Disbursements cannot be null.");
+        }
+
         Integer confirmedTenure = lead.getConfirmedTenureMonths();
         if (confirmedTenure == null || confirmedTenure <= 0) {
             throw new IllegalArgumentException("Confirmed tenure must be a positive number.");
@@ -108,6 +118,9 @@ public class LoanServiceImpl implements LoanService {
     @Transactional
     @Override
     public void processLoanApplication(Lead lead) {
+        if (lead == null) {
+            throw new IllegalArgumentException("Lead cannot be null.");
+        }
         logger.info("Processing loan with Lead ID: {}", lead.getLeadsId());
 
         try {

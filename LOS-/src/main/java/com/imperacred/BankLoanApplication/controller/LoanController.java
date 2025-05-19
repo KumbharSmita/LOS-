@@ -36,11 +36,14 @@ public class LoanController {
     // Process the loan and generate EMI schedule
     @PostMapping("/process-loan/{leadsId}")
     public ResponseEntity<String> processLoan(@PathVariable Integer leadsId) {
+        if (leadsId == null || leadsId <= 0) {
+            return ResponseEntity.badRequest().body("Invalid lead ID.");
+        }
         try {
             logger.info("Starting the process for loan lead ID: {}", leadsId);
 
             Lead lead = leadsRepository.findById(leadsId)
-                    .orElseThrow(() -> new RuntimeException("Lead  not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("Lead not found with ID: " + leadsId));
 
             logger.debug("Fetched leads details for ID: {}", leadsId);
 
@@ -49,7 +52,10 @@ public class LoanController {
             logger.info("Loan processed successfully and EMI schedule created for lead ID: {}", leadsId);
 
             return ResponseEntity.ok("Loan processed and EMI schedule created successfully.");
-        } catch (RuntimeException e) {
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid argument for lead ID: {}", leadsId, e);
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
             logger.error("Error processing lead ID: {}", leadsId, e);
             return ResponseEntity.status(500).body("Error processing lead: " + e.getMessage());
         }
