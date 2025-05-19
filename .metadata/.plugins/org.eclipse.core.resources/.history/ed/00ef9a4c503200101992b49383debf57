@@ -1,0 +1,80 @@
+package com.imperacred.BankLoanApplication.controller;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.imperacred.BankLoanApplication.config.FileStorageProperties;
+import com.imperacred.BankLoanApplication.dto.DocumentUploadMetadata;
+import com.imperacred.BankLoanApplication.dto.DocumentsDTO;
+import com.imperacred.BankLoanApplication.service.DocumentsService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+@RestController
+@RequestMapping("/api/documents")
+public class DocumentsController {
+
+    @Autowired
+    private DocumentsService documentsService;
+
+    @Autowired
+    private FileStorageProperties fileStorageProperties;
+
+    @PostMapping("/upload-multiple")
+    public List<DocumentsDTO> uploadMultipleDocuments(
+            @RequestParam("leads_id") Integer leadsId,
+            @RequestPart("metadata") String metadataJson,
+            @RequestPart("files") MultipartFile[] files) throws IOException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<DocumentUploadMetadata> metadataList = objectMapper.readValue(metadataJson, new TypeReference<>() {});
+
+        if (metadataList.size() != files.length) {
+            throw new IllegalArgumentException("Metadata count must match file count.");
+        }
+
+        String basePath = fileStorageProperties.getUploadDir();
+        File leadFolder = new File(basePath + leadsId + File.separator);
+        if (!leadFolder.exists() && !leadFolder.mkdirs()) {
+            throw new IOException("Failed to create lead directory");
+        }
+
+        List<DocumentsDTO> uploadedDocuments = new ArrayList<>();
+        for (int i = 0; i < files.length; i++) {
+            MultipartFile file = files[i];
+            DocumentUploadMetadata metadata = metadataList.get(i);
+
+            if (file.isEmpty()) continue;
+
+            String ext = Optional.ofNullable(file.getOriginalFilename())
+                    .filter(f -> f.contains("."))
+                    .map(f -> f.substring(f.lastIndexOf(".")))
+                    .orElse("");
+
+            String filename = metadata.getDocumentType().replaceAll("[^a-zA-Z0-9]", "_").toLowerCase()
+                    + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                    + "_" + UUID.randomUUID().toString().substring(0, 8) + ext;
+
+            File dest = new File(leadFolder, filename);
+            file.transferTo(dest);
+
+            DocumentsDTO doc = DocumentsDTO.builder()
+                    .leads_id(leadsId)
+                    .document_type(metadata.getDocumentType())
+                    .document_category(metadata.getDocumentCategory())
+                    .file_path(dest.getAbsolutePath())
+                    .uploaded_at(LocalDateTime.now())
+                    .build();
+
+            uploadedDocuments.add(documentsService.createDocument(doc));
+        }
+
+        return uploadedDocuments;
+    }
+}

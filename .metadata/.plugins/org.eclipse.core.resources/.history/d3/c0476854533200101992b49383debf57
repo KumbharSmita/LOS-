@@ -1,0 +1,87 @@
+package com.imperacred.BankLoanApplication.service.impl;
+
+import com.imperacred.BankLoanApplication.dto.DocumentsDTO;
+import com.imperacred.BankLoanApplication.model.Documents;
+import com.imperacred.BankLoanApplication.repository.DocumentsRepository;
+import com.imperacred.BankLoanApplication.service.DocumentsService;
+import com.imperacred.BankLoanApplication.service.EmailService;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class DocumentsServiceImpl implements DocumentsService {
+
+    private static final Logger logger = LogManager.getLogger(DocumentsServiceImpl.class);
+
+    @Autowired
+    private DocumentsRepository repo;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Override
+    public DocumentsDTO createDocument(DocumentsDTO dto) {
+        Documents doc = new Documents();
+        doc.setLeads_id(dto.getLeads_id());
+        doc.setDocument_type(dto.getDocument_type());
+        doc.setDocument_category(dto.getDocument_category());
+        doc.setFile_path(dto.getFile_path());
+        doc.setUploaded_at(dto.getUploaded_at());
+
+        doc = repo.save(doc);
+        dto.setId(doc.getId());
+
+        try {
+            // Ensure DTO has email and name populated from frontend
+            String email = dto.getEmail();
+            String name = dto.getApplicantName();
+
+            emailService.sendDocumentUploadConfirmation(email, name);
+            logger.info("Document upload email sent to {}", email);
+        } catch (Exception e) {
+            logger.error("Failed to send document upload email", e);
+        }
+
+        return dto;
+    }
+
+    @Override
+    public List<DocumentsDTO> getAllDocuments() {
+        return repo.findAll().stream().map(d -> DocumentsDTO.builder()
+                .id(d.getId())
+                .leads_id(d.getLeads_id())
+                .document_type(d.getDocument_type())
+                .document_category(d.getDocument_category())
+                .file_path(d.getFile_path())
+                .uploaded_at(d.getUploaded_at())
+                .email(d.getEmail()) // Assuming added in model
+                .applicantName(d.getApplicantName()) // Assuming added
+                .build()).collect(Collectors.toList());
+    }
+
+    @Override
+    public DocumentsDTO getDocumentById(Integer id) {
+        return repo.findById(id).map(d -> DocumentsDTO.builder()
+                .id(d.getId())
+                .leads_id(d.getLeads_id())
+                .document_type(d.getDocument_type())
+                .document_category(d.getDocument_category())
+                .file_path(d.getFile_path())
+                .uploaded_at(d.getUploaded_at())
+                .email(d.getEmail())
+                .applicantName(d.getApplicantName())
+                .build()).orElse(null);
+    }
+
+    @Override
+    public void deleteDocument(Integer id) {
+        repo.deleteById(id);
+    }
+}

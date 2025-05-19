@@ -1,0 +1,12 @@
+package com.imperacred.BankLoanApplication.service;
+
+public interface EmailService {
+
+    void sendEmail(String toEmail, String subject, String message);
+
+    void sendOtpEmail(String email, String otp);
+
+    void sendApplicationStatusEmail(String email, String status);
+
+    void sendDocumentUploadConfirmation(String email);
+}

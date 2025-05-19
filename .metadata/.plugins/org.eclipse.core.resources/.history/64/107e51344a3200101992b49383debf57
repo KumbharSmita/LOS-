@@ -1,0 +1,77 @@
+package com.imperacred.BankLoanApplication.service.impl;
+
+import com.imperacred.BankLoanApplication.service.EmailService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+
+@Service
+public class EmailServiceImpl implements EmailService {
+
+    private static final Logger logger = LogManager.getLogger(EmailServiceImpl.class);
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Override
+    public void sendEmail(String toEmail, String subject, String message) {
+        SimpleMailMessage emailMessage = new SimpleMailMessage();
+        emailMessage.setTo(toEmail);
+        emailMessage.setSubject(subject);
+        emailMessage.setText(message);
+
+        try {
+            javaMailSender.send(emailMessage);
+            logger.info("Email sent successfully to: {}", toEmail);
+        } catch (Exception e) {
+            logger.error("Failed to send email to: {}", toEmail, e);
+        }
+    }
+
+    @Override
+    public void sendOtpEmail(String email, String otp) {
+        String subject = "Your OTP for Bank Loan Application";
+        String message = "Dear Customer,\n\n" +
+                "Your OTP for verifying your loan application is: " + otp + "\n\n" +
+                "Please enter this OTP within the next 2 minutes to complete the verification.\n\n" +
+                "Thank you.\n\n" +
+                "Best regards,\n" +
+                "Bank Loan Application Team";
+        sendEmail(email, subject, message);
+    }
+
+    @Override
+    public void sendDocumentUploadNotification(String email, String documentName) {
+        String subject = "Document Upload Confirmation";
+        String message = "Dear Customer,\n\n" +
+                "Your document '" + documentName + "' has been successfully uploaded.\n\n" +
+                "We will verify it shortly and inform you of the next steps.\n\n" +
+                "Regards,\nBank Loan Application Team";
+        sendEmail(email, subject, message);
+    }
+
+    @Override
+    public void sendDisbursementNotification(String email, String disbursementDetails) {
+        String subject = "Loan Disbursement Completed";
+        String message = "Dear Customer,\n\n" +
+                "Your loan disbursement has been processed successfully.\n" +
+                "Details:\n" + disbursementDetails + "\n\n" +
+                "Thank you for choosing our services.\n\n" +
+                "Best,\nBank Loan Application Team";
+        sendEmail(email, subject, message);
+    }
+
+    @Override
+    public void sendLoanAgreementNotification(String email, String agreementDetails) {
+        String subject = "Loan Agreement Generated";
+        String message = "Dear Customer,\n\n" +
+                "Your loan agreement has been generated successfully.\n" +
+                "Details:\n" + agreementDetails + "\n\n" +
+                "Please review and acknowledge it at your earliest convenience.\n\n" +
+                "Sincerely,\nBank Loan Application Team";
+        sendEmail(email, subject, message);
+    }
+}

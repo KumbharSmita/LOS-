@@ -1,0 +1,88 @@
+package com.imperacred.BankLoanApplication.service.impl;
+
+import com.loanorigination.dto.LoanAgreementDTO;
+import com.loanorigination.entity.LoanAgreement;
+import com.loanorigination.repository.LoanAgreementRepository;
+import com.loanorigination.service.LoanAgreementService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class LoanAgreementServiceImpl implements LoanAgreementService {
+
+    @Autowired
+    private LoanAgreementRepository repository;
+
+    private LoanAgreementDTO toDTO(LoanAgreement entity) {
+        return LoanAgreementDTO.builder()
+                .agreementId(entity.getAgreementId())
+                .leadsId(entity.getLeadsId())
+                .sanctionId(entity.getSanctionId())
+                .agreementDate(entity.getAgreementDate())
+                .agreementStatus(entity.getAgreementStatus())
+                .eSignatureUrl(entity.getESignatureUrl())
+                .signedBy(entity.getSignedBy())
+                .signedAt(entity.getSignedAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
+    private LoanAgreement toEntity(LoanAgreementDTO dto) {
+        LoanAgreement entity = new LoanAgreement();
+        entity.setAgreementId(dto.getAgreementId());
+        entity.setLeadsId(dto.getLeadsId());
+        entity.setSanctionId(dto.getSanctionId());
+        entity.setAgreementDate(dto.getAgreementDate());
+        entity.setAgreementStatus(dto.getAgreementStatus());
+        entity.setESignatureUrl(dto.getESignatureUrl());
+        entity.setSignedBy(dto.getSignedBy());
+        entity.setSignedAt(dto.getSignedAt());
+        entity.setCreatedAt(dto.getCreatedAt());
+        entity.setUpdatedAt(dto.getUpdatedAt());
+        return entity;
+    }
+
+    @Override
+    public LoanAgreementDTO createLoanAgreement(LoanAgreementDTO dto) {
+        return toDTO(repository.save(toEntity(dto)));
+    }
+
+    @Override
+    public LoanAgreementDTO getLoanAgreementById(Integer id) {
+        Optional<LoanAgreement> optional = repository.findById(id);
+        return optional.map(this::toDTO).orElse(null);
+    }
+
+    @Override
+    public List<LoanAgreementDTO> getAllLoanAgreements() {
+        return repository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public LoanAgreementDTO updateLoanAgreement(Integer id, LoanAgreementDTO dto) {
+        Optional<LoanAgreement> optional = repository.findById(id);
+        if (optional.isPresent()) {
+            LoanAgreement existing = optional.get();
+            existing.setLeadsId(dto.getLeadsId());
+            existing.setSanctionId(dto.getSanctionId());
+            existing.setAgreementDate(dto.getAgreementDate());
+            existing.setAgreementStatus(dto.getAgreementStatus());
+            existing.setESignatureUrl(dto.getESignatureUrl());
+            existing.setSignedBy(dto.getSignedBy());
+            existing.setSignedAt(dto.getSignedAt());
+            existing.setUpdatedAt(dto.getUpdatedAt());
+            return toDTO(repository.save(existing));
+        }
+        return null;
+    }
+
+    @Override
+    public void deleteLoanAgreement(Integer id) {
+        repository.deleteById(id);
+    }
+}

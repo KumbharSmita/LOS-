@@ -1,0 +1,5 @@
+package com.imperacred.BankLoanApplication.repository;
+
+public class SanctionLetterRepository {
+
+}

@@ -1,0 +1,77 @@
+package com.imperacred.BankLoanApplication.service.impl;
+
+import com.imperacred.BankLoanApplication.dto.SanctionLetterDTO;
+import com.imperacred.BankLoanApplication.model.SanctionLetter;
+import com.imperacred.BankLoanApplication.repository.SanctionLetterRepository;
+import com.imperacred.BankLoanApplication.service.SanctionLetterService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class SanctionLetterServiceImpl implements SanctionLetterService {
+
+    @Autowired
+    private SanctionLetterRepository repository;
+
+    private SanctionLetterDTO mapToDTO(SanctionLetter s) {
+        return SanctionLetterDTO.builder()
+                .sanctionId(s.getSanctionId())
+                .applicationId(s.getApplicationId())
+                .loanAmount(s.getLoanAmount())
+                .interestRate(s.getInterestRate())
+                .tenure(s.getTenure())
+                .emiAmount(s.getEmiAmount())
+                .sanctionDate(s.getSanctionDate())
+                .sanctionStatus(s.getSanctionStatus())
+                .termsConditions(s.getTermsConditions())
+                .createdAt(s.getCreatedAt())
+                .updatedAt(s.getUpdatedAt())
+                .build();
+    }
+
+    private SanctionLetter mapToEntity(SanctionLetterDTO dto) {
+        return SanctionLetter.builder()
+                .sanctionId(dto.getSanctionId())
+                .applicationId(dto.getApplicationId())
+                .loanAmount(dto.getLoanAmount())
+                .interestRate(dto.getInterestRate())
+                .tenure(dto.getTenure())
+                .emiAmount(dto.getEmiAmount())
+                .sanctionDate(dto.getSanctionDate())
+                .sanctionStatus(dto.getSanctionStatus())
+                .termsConditions(dto.getTermsConditions())
+                .createdAt(dto.getCreatedAt())
+                .updatedAt(dto.getUpdatedAt())
+                .build();
+    }
+
+    @Override
+    public SanctionLetterDTO createSanctionLetter(SanctionLetterDTO dto) {
+        SanctionLetter saved = repository.save(mapToEntity(dto));
+        return mapToDTO(saved);
+    }
+
+    @Override
+    public SanctionLetterDTO getSanctionLetterById(Integer id) {
+        Optional<SanctionLetter> optional = repository.findById(id);
+        return optional.map(this::mapToDTO).orElse(null);
+    }
+
+    @Override
+    public List<SanctionLetterDTO> getAllSanctionLetters() {
+        return repository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean deleteSanctionLetter(Integer id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+}

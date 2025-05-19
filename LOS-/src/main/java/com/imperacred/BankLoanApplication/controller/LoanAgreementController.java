@@ -1,0 +1,48 @@
+package com.imperacred.BankLoanApplication.controller;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.imperacred.BankLoanApplication.dto.LoanAgreementDTO;
+import com.imperacred.BankLoanApplication.service.LoanAgreementService;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/loan-agreements")
+@CrossOrigin(origins = "http://localhost:3000")
+public class LoanAgreementController {
+
+    @Autowired
+    private LoanAgreementService service;
+
+    @PostMapping
+    public ResponseEntity<LoanAgreementDTO> create(@RequestBody LoanAgreementDTO dto) {
+        return ResponseEntity.ok(service.createLoanAgreement(dto));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LoanAgreementDTO> getById(@PathVariable Integer id) {
+        LoanAgreementDTO dto = service.getLoanAgreementById(id);
+        return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<LoanAgreementDTO>> getAll() {
+        return ResponseEntity.ok(service.getAllLoanAgreements());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<LoanAgreementDTO> update(@PathVariable Integer id, @RequestBody LoanAgreementDTO dto) {
+        LoanAgreementDTO updated = service.updateLoanAgreement(id, dto);
+        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        service.deleteLoanAgreement(id);
+        return ResponseEntity.noContent().build();
+    }
+}

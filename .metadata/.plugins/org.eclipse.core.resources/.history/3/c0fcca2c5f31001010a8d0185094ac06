@@ -1,0 +1,118 @@
+package com.imperacred.BankLoanApplication.controller;
+
+import com.imperacred.BankLoanApplication.dto.DocumentsDTO;
+import com.imperacred.BankLoanApplication.service.DocumentsService;
+import com.imperacred.BankLoanApplication.config.FileStorageProperties;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/documents")
+public class DocumentsController {
+
+    private static final Logger logger = LogManager.getLogger(DocumentsController.class);
+
+    @Autowired
+    private DocumentsService documentsService;
+
+    @Autowired
+    private FileStorageProperties fileStorageProperties;
+
+    @PostMapping("/upload")
+    public List<DocumentsDTO> uploadDocuments(
+            @RequestParam("leads_id") Integer leadsId,
+            @RequestParam("document_type") String documentType,
+            @RequestParam("document_category") String documentCategory,
+            @RequestPart("file") MultipartFile[] files) throws IOException {
+
+        String basePath = fileStorageProperties.getUploadDir();
+        logger.info("Uploading {} document(s) for lead_id {}", files.length, leadsId);
+
+        List<DocumentsDTO> uploadedDocuments = new ArrayList<>();
+        File leadFolder = new File(basePath + leadsId + File.separator);
+        if (!leadFolder.exists() && !leadFolder.mkdirs()) {
+            logger.error("Could not create directory for lead_id {}", leadsId);
+            throw new IOException("Directory creation failed");
+        }
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                logger.warn("Skipping empty file for lead_id {}", leadsId);
+                continue;
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : "";
+
+            String uniqueFilename = UUID.randomUUID() + extension;
+            File destinationFile = new File(leadFolder, uniqueFilename);
+            file.transferTo(destinationFile);
+
+            DocumentsDTO documentDTO = DocumentsDTO.builder()
+                    .leads_id(leadsId)
+                    .document_type(documentType)
+                    .document_category(documentCategory)
+                    .file_path(destinationFile.getAbsolutePath())
+                    .uploaded_at(LocalDateTime.now())
+                    .build();
+
+            uploadedDocuments.add(documentsService.createDocument(documentDTO));
+            logger.debug("Uploaded file {} for lead_id {}", uniqueFilename, leadsId);
+        }
+
+        logger.info("Successfully uploaded {} document(s) for lead_id {}", uploadedDocuments.size(), leadsId);
+        return uploadedDocuments;
+    }
+
+    @GetMapping("/download/{id}")
+    public ResponseEntity<Resource> downloadDocument(@PathVariable Integer id) throws MalformedURLException {
+        logger.info("Request to download document ID {}", id);
+
+        DocumentsDTO document = documentsService.getDocumentById(id);
+        if (document == null) {
+            logger.warn("Document with ID {} not found", id);
+            return ResponseEntity.notFound().build();
+        }
+
+        File file = new File(document.getFile_path());
+        if (!file.exists()) {
+            logger.warn("File not found at path: {}", document.getFile_path());
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource resource = new UrlResource(file.toURI());
+        String contentType;
+        try {
+            contentType = Files.probeContentType(file.toPath());
+        } catch (IOException e) {
+            logger.error("Could not determine file type", e);
+            contentType = "application/octet-stream";
+        }
+
+        logger.info("Serving file {} for download, document ID {}", file.getName(), id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                .body(resource);
+    }
+}

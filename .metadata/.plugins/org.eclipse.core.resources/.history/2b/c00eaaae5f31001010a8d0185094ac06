@@ -1,0 +1,5 @@
+package com.imperacred.BankLoanApplication.exception;
+
+public class GlobalExceptionHandler {
+
+}

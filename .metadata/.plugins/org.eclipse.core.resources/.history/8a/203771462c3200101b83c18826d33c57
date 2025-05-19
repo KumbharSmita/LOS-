@@ -1,0 +1,40 @@
+import jakarta.validation.constraints.*;
+
+public class LeadsDTO {
+
+    @NotBlank(message = "First name is required")
+    private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    private String lastName;
+
+    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is required")
+    private String email;
+
+    @Pattern(regexp = "^[6-9]\\d{9}$", message = "Phone number should be 10 digits and start with 6-9")
+    private String phone;
+
+    @Pattern(regexp = "[A-Z]{5}[0-9]{4}[A-Z]{1}", message = "PAN number should be valid")
+    private String panNumber;
+
+    @Pattern(regexp = "\\d{12}", message = "Aadhaar number must be 12 digits")
+    private String aadhaarNumber;
+
+    private String source;
+
+    @NotBlank(message = "Loan type is required")
+    private String loanType;
+
+    @NotNull(message = "Amount is required")
+    @Positive(message = "Amount must be positive")
+    private Double amount;
+
+    @NotNull(message = "Tenure is required")
+    @Min(value = 1, message = "Tenure should be at least 1 month")
+    private Integer tenureMonths;
+
+    private String purpose;
+
+    // Getters and setters (or use Lombok)
+}

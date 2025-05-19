@@ -1,0 +1,82 @@
+package com.imperacred.BankLoanApplication.service.impl;
+
+import com.imperacred.BankLoanApplication.service.EmailService;
+
+import lombok.extern.log4j.Log4j2;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+
+@Service
+@Log4j2
+public class EmailServiceImpl implements EmailService {
+
+    private static final Logger logger = LogManager.getLogger(EmailServiceImpl.class);
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+//    @Override
+//    public void sendEmail(String toEmail, String subject, String message) {
+//        SimpleMailMessage emailMessage = new SimpleMailMessage();
+//        emailMessage.setTo(toEmail);
+//        emailMessage.setSubject(subject);
+//        emailMessage.setText(message);
+//
+//        try {
+//            javaMailSender.send(emailMessage);
+//            logger.info("Email sent successfully to: {}", toEmail);
+//        } catch (Exception e) {
+//            logger.error("Failed to send email to: {}", toEmail, e);
+//        }
+//    }
+    @Override
+    public void sendEmail(String toEmail, String subject, String message) {
+        try {
+            SimpleMailMessage mail = new SimpleMailMessage();
+            mail.setTo(toEmail);
+            mail.setSubject(subject);
+            mail.setText(message);
+            javaMailSender.send(mail);
+            log.info("Email sent to {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send email to {}: {}", toEmail, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void sendOtpEmail(String email, String otp) {
+        String subject = "Your OTP for Bank Loan Application";
+        String message = "Dear Customer,\n\n" +
+                         "Your OTP for verifying your loan application is: " + otp + "\n\n" +
+                         "Please enter this OTP within the next 2 minutes to complete the verification.\n\n" +
+                         "Thank you.\n\n" +
+                         "Best regards,\n" +
+                         "Bank Loan Application Team";
+        sendEmail(email, subject, message);
+    }
+
+    @Override
+    public void sendApplicationStatusEmail(String email, String status) {
+        String subject = "Loan Application Status Update";
+        String message = "Dear Customer,\n\n" +
+                         "Your loan application status has been updated to: " + status + "\n\n" +
+                         "Thank you for applying.\n\n" +
+                         "Regards,\nBank Loan Application Team";
+        sendEmail(email, subject, message);
+    }
+
+    @Override
+    public void sendDocumentUploadConfirmation(String email) {
+        String subject = "Document Upload Confirmation";
+        String message = "Dear Customer,\n\n" +
+                         "We have received your documents for the loan application.\n" +
+                         "We will review them and update you shortly.\n\n" +
+                         "Best regards,\nBank Loan Application Team";
+        sendEmail(email, subject, message);
+    }
+}

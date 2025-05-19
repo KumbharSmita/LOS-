@@ -1,0 +1,132 @@
+package com.imperacred.BankLoanApplication.service.impl;
+
+import com.imperacred.BankLoanApplication.dto.LoanAgreementDTO;
+import com.imperacred.BankLoanApplication.model.LoanAgreement;
+import com.imperacred.BankLoanApplication.repository.LoanAgreementRepository;
+import com.imperacred.BankLoanApplication.service.LoanAgreementService;
+import com.imperacred.BankLoanApplication.service.EmailService;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class LoanAgreementServiceImpl implements LoanAgreementService {
+
+    private static final Logger logger = LogManager.getLogger(LoanAgreementServiceImpl.class);
+
+    @Autowired
+    private LoanAgreementRepository repository;
+
+    @Autowired
+    private EmailService emailService;
+
+    private LoanAgreementDTO toDTO(LoanAgreement entity) {
+        return LoanAgreementDTO.builder()
+                .agreementId(entity.getAgreementId())
+                .leadsId(entity.getLeadsId())
+                .sanctionId(entity.getSanctionId())
+                .agreementDate(entity.getAgreementDate())
+                .agreementStatus(entity.getAgreementStatus())
+                .eSignatureUrl(entity.getESignatureUrl())
+                .signedBy(entity.getSignedBy())
+                .signedAt(entity.getSignedAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .applicantName(entity.getApplicantName()) // ensure present in entity
+                .applicantEmail(entity.getApplicantEmail())
+                .loanAmount(entity.getLoanAmount())
+                .build();
+    }
+
+    private LoanAgreement toEntity(LoanAgreementDTO dto) {
+        LoanAgreement entity = new LoanAgreement();
+        entity.setAgreementId(dto.getAgreementId());
+        entity.setLeadsId(dto.getLeadsId());
+        entity.setSanctionId(dto.getSanctionId());
+        entity.setAgreementDate(dto.getAgreementDate());
+        entity.setAgreementStatus(dto.getAgreementStatus());
+        entity.setESignatureUrl(dto.getESignatureUrl());
+        entity.setSignedBy(dto.getSignedBy());
+        entity.setSignedAt(dto.getSignedAt());
+        entity.setCreatedAt(dto.getCreatedAt());
+        entity.setUpdatedAt(dto.getUpdatedAt());
+        entity.setApplicantName(dto.getApplicantName());
+        entity.setApplicantEmail(dto.getApplicantEmail());
+        entity.setLoanAmount(dto.getLoanAmount());
+        return entity;
+    }
+
+    @Override
+    public LoanAgreementDTO createLoanAgreement(LoanAgreementDTO dto) {
+        LoanAgreement saved = repository.save(toEntity(dto));
+        LoanAgreementDTO responseDto = toDTO(saved);
+
+        try {
+            String email = dto.getApplicantEmail();
+            String name = dto.getApplicantName();
+            String amount = dto.getLoanAmount(); // or convert from BigDecimal
+            String date = dto.getAgreementDate().toString();
+
+            emailService.sendLoanApprovalEmail(email, name, amount, date);
+            logger.info("Loan approval email sent to {}", email);
+        } catch (Exception e) {
+            logger.error("Failed to send loan approval email", e);
+        }
+
+        return responseDto;
+    }
+
+    @Override
+    public LoanAgreementDTO getLoanAgreementById(Integer id) {
+        Optional<LoanAgreement> optional = repository.findById(id);
+        return optional.map(this::toDTO).orElse(null);
+    }
+
+    @Override
+    public List<LoanAgreementDTO> getAllLoanAgreements() {
+        return repository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public LoanAgreementDTO updateLoanAgreement(Integer id, LoanAgreementDTO dto) {
+        Optional<LoanAgreement> optional = repository.findById(id);
+        if (optional.isPresent()) {
+            LoanAgreement existing = optional.get();
+            existing.setLeadsId(dto.getLeadsId());
+            existing.setSanctionId(dto.getSanctionId());
+            existing.setAgreementDate(dto.getAgreementDate());
+            existing.setAgreementStatus(dto.getAgreementStatus());
+            existing.setESignatureUrl(dto.getESignatureUrl());
+            existing.setSignedBy(dto.getSignedBy());
+            existing.setSignedAt(dto.getSignedAt());
+            existing.setUpdatedAt(dto.getUpdatedAt());
+            existing.setApplicantEmail(dto.getApplicantEmail());
+            existing.setApplicantName(dto.getApplicantName());
+            existing.setLoanAmount(dto.getLoanAmount());
+
+            LoanAgreement updated = repository.save(existing);
+
+            try {
+                emailService.sendLoanApprovalEmail(dto.getApplicantEmail(), dto.getApplicantName(), dto.getLoanAmount(), dto.getAgreementDate().toString());
+                logger.info("Loan agreement update email sent to {}", dto.getApplicantEmail());
+            } catch (Exception e) {
+                logger.error("Failed to send update loan approval email", e);
+            }
+
+            return toDTO(updated);
+        }
+        return null;
+    }
+
+    @Override
+    public void deleteLoanAgreement(Integer id) {
+        repository.deleteById(id);
+    }
+}

@@ -1,0 +1,5 @@
+package com.imperacred.BankLoanApplication.service.impl;
+
+public class SanctionLetterServiceImpl {
+
+}

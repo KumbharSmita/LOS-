@@ -1,0 +1,151 @@
+package com.imperacred.BankLoanApplication.controller;
+
+import com.imperacred.BankLoanApplication.dto.DocumentsDTO;
+import com.imperacred.BankLoanApplication.service.DocumentsService;
+import com.imperacred.BankLoanApplication.config.FileStorageProperties;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+@RestController
+@RequestMapping("/api/documents")
+public class DocumentsController {
+
+    private static final Logger logger = LogManager.getLogger(DocumentsController.class);
+
+    @Autowired
+    private DocumentsService documentsService;
+
+    @Autowired
+    private FileStorageProperties fileStorageProperties;
+
+    // POST: Upload documents
+    @PostMapping("/upload")
+    public List<DocumentsDTO> uploadDocuments(
+            @RequestParam("leads_id") Integer leadsId,
+            @RequestParam("document_type") String documentType,
+            @RequestParam("document_category") String documentCategory,
+            @RequestPart("file") MultipartFile[] files) throws IOException {
+
+        String basePath = fileStorageProperties.getUploadDir();
+        logger.info("Uploading {} document(s) for lead_id {}", files.length, leadsId);
+
+        List<DocumentsDTO> uploadedDocuments = new ArrayList<>();
+        File leadFolder = new File(basePath + leadsId + File.separator);
+        if (!leadFolder.exists() && !leadFolder.mkdirs()) {
+            logger.error("Could not create directory for lead_id {}", leadsId);
+            throw new IOException("Directory creation failed");
+        }
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                logger.warn("Skipping empty file for lead_id {}", leadsId);
+                continue;
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : "";
+
+            String timestamp = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
+            String randomPart = UUID.randomUUID().toString().substring(0, 8);
+            String sanitizedDocType = documentType.trim().toLowerCase().replaceAll("[^a-z0-9]", "_");
+            String uniqueFilename = sanitizedDocType + "_" + timestamp + "_" + randomPart + extension;
+
+            File destinationFile = new File(leadFolder, uniqueFilename);
+            file.transferTo(destinationFile);
+
+            DocumentsDTO documentDTO = DocumentsDTO.builder()
+                    .leads_id(leadsId)
+                    .document_type(documentType)
+                    .document_category(documentCategory)
+                    .file_path(destinationFile.getAbsolutePath())
+                    .uploaded_at(LocalDateTime.now())
+                    .build();
+
+            uploadedDocuments.add(documentsService.createDocument(documentDTO));
+            logger.debug("Uploaded file {} for lead_id {}", uniqueFilename, leadsId);
+        }
+
+        logger.info("Successfully uploaded {} document(s) for lead_id {}", uploadedDocuments.size(), leadsId);
+        return uploadedDocuments;
+    }
+
+    // GET: Get all documents
+    @GetMapping
+    public List<DocumentsDTO> getAllDocuments() {
+        return documentsService.getAllDocuments();
+    }
+
+    // GET: Get document by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<DocumentsDTO> getDocumentById(@PathVariable Integer id) {
+        DocumentsDTO doc = documentsService.getDocumentById(id);
+        return doc != null ? ResponseEntity.ok(doc) : ResponseEntity.notFound().build();
+    }
+
+    // GET: Download document file
+    @GetMapping("/download/{id}")
+    public ResponseEntity<Resource> downloadDocument(@PathVariable Integer id) throws MalformedURLException {
+        DocumentsDTO document = documentsService.getDocumentById(id);
+        if (document == null) return ResponseEntity.notFound().build();
+
+        File file = new File(document.getFile_path());
+        if (!file.exists()) return ResponseEntity.notFound().build();
+
+        Resource resource = new UrlResource(file.toURI());
+        String contentType;
+        try {
+            contentType = Files.probeContentType(file.toPath());
+        } catch (IOException e) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                .body(resource);
+    }
+
+    // PUT: Update document type/category
+    @PutMapping("/{id}")
+    public ResponseEntity<DocumentsDTO> updateDocument(
+            @PathVariable Integer id,
+            @RequestBody DocumentsDTO updatedDocument) {
+
+        DocumentsDTO existing = documentsService.getDocumentById(id);
+        if (existing == null) return ResponseEntity.notFound().build();
+
+        existing.setDocument_type(updatedDocument.getDocument_type());
+        existing.setDocument_category(updatedDocument.getDocument_category());
+
+        DocumentsDTO updated = documentsService.updateDocument(existing);
+        return ResponseEntity.ok(updated);
+    }
+
+    // DELETE: Delete document
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDocument(@PathVariable Integer id) {
+        DocumentsDTO existing = documentsService.getDocumentById(id);
+        if (existing == null) return ResponseEntity.notFound().build();
+
+        documentsService.deleteDocument(id);
+        return ResponseEntity.noContent().build();
+    }
+}

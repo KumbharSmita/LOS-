@@ -1,0 +1,68 @@
+package com.imperacred.BankLoanApplication.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+/**
+ * Entity representing a sanction letter record.
+ */
+@Entity
+@Table(name = "sanction_letter")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SanctionLetter {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "sanction_id")
+    private Integer sanctionId;
+
+    @Column(name = "leads_id", nullable = false)
+    private Integer leadsId;
+
+    @Column(name = "loan_amount", nullable = false, precision = 15, scale = 2)
+    private BigDecimal loanAmount;
+
+    @Column(name = "interest_rate", nullable = false, precision = 5, scale = 2)
+    private BigDecimal interestRate;
+
+    @Column(nullable = false)
+    private Integer tenure;
+
+    @Column(name = "emi_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal emiAmount;
+
+    @Column(name = "sanction_date", nullable = false)
+    private LocalDate sanctionDate;
+
+    @Column(name = "sanction_status", nullable = false, length = 20)
+    private String sanctionStatus;
+
+    @Column(name = "terms_conditions")
+    private String termsConditions;
+
+
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}

@@ -1,0 +1,12 @@
+package com.imperacred.BankLoanApplication.service;
+
+public interface EmailService {
+    void sendEmail(String toEmail, String subject, String message);
+    void sendOtpEmail(String email, String otp);
+
+    // Reusable email triggers
+    void sendDocumentUploadNotification(String email, String documentName);
+    void sendDisbursementNotification(String email, String disbursementDetails);
+    void sendLoanAgreementNotification(String email, String agreementDetails);
+}
+
