@@ -48,4 +48,20 @@ public class EmailServiceImpl implements EmailService {
             logger.error("Error sending OTP email to: {}", email, e);  // Logging OTP email sending failure
         }
     }
+
+    @Override
+    public void sendSimpleEmail(String email, String subject, String body) {
+        SimpleMailMessage emailMessage = new SimpleMailMessage();
+        emailMessage.setTo(email);            // Set recipient's email
+        emailMessage.setSubject(subject);    // Set the subject of the email
+        emailMessage.setText(body);          // Set the body/content of the email
+
+        try {
+            javaMailSender.send(emailMessage);  // Send the email using JavaMailSender
+            logger.info(" email sent successfully to: {}", email);  // Log success
+        } catch (Exception e) {
+            logger.error("Failed to send  email to: {}", email, e);  // Log error with exception details
+        }
+    }
+
 }

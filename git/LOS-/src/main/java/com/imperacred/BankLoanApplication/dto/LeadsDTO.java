@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LeadsDTO {
-	@Column(name="leads_id")
+	
     private Integer leadsId;
 	private String firstName;
 	private String lastName;

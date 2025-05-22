@@ -7,5 +7,8 @@ public interface EmailService {
 
     // Method to send OTP email
     void sendOtpEmail(String email, String otp);
+
+	void sendSimpleEmail(String email, String string, String body);
     
 }
+

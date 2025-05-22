@@ -1,15 +1,15 @@
 package com.imperacred.BankLoanApplication.service.impl;
 
+import com.imperacred.BankLoanApplication.dto.LeadAssignmentResponseDTO;
+import com.imperacred.BankLoanApplication.dto.LeadVerificationResponseDTO;
 import com.imperacred.BankLoanApplication.dto.LeadsDTO;
 import com.imperacred.BankLoanApplication.exception.DuplicateLeadException;
+import com.imperacred.BankLoanApplication.mapper.LeadMapper;
 import com.imperacred.BankLoanApplication.model.Lead;
 import com.imperacred.BankLoanApplication.model.Otp;
 import com.imperacred.BankLoanApplication.repository.LeadsRepository;
 import com.imperacred.BankLoanApplication.repository.OtpRepository;
-import com.imperacred.BankLoanApplication.service.CreditScoresService;
-import com.imperacred.BankLoanApplication.service.EmailService;
-import com.imperacred.BankLoanApplication.service.LeadAssignmentService;
-import com.imperacred.BankLoanApplication.service.LeadsService;
+import com.imperacred.BankLoanApplication.service.*;
 import com.imperacred.BankLoanApplication.util.ValidationUtil;
 
 import org.apache.logging.log4j.LogManager;
@@ -20,13 +20,12 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class LeadsServiceImpl implements LeadsService {
 
     private static final Logger logger = LogManager.getLogger(LeadsServiceImpl.class);
+    private static final int OTP_EXPIRY_MINUTES = 2;
 
     @Autowired
     private LeadsRepository leadsRepository;
@@ -36,64 +35,48 @@ public class LeadsServiceImpl implements LeadsService {
 
     @Autowired
     private EmailService emailService;
-    
+
     @Autowired
     private CreditScoresService creditScoreService;
-    
+
     @Autowired
     private LeadAssignmentService leadAssignmentService;
 
-
-    private static final int OTP_EXPIRY_MINUTES = 2;
-
     @Override
-    public int createLead(LeadsDTO leadDTO) {
+    public LeadsDTO createLead(LeadsDTO leadDTO) {
         logger.info("Creating new lead with data: {}", leadDTO);
 
-        if (!ValidationUtil.isValidEmail(leadDTO.getEmail())) {  // Use utility method for email validation
-            logger.warn("Invalid email format: {}", leadDTO.getEmail());
+        // Validate inputs
+        if (!ValidationUtil.isValidEmail(leadDTO.getEmail())) {
+            logger.error("Invalid email format: {}", leadDTO.getEmail());
             throw new IllegalArgumentException("Invalid email format.");
         }
-
-        // Validate Aadhaar Number Format (should be 12 digits)
-        if (!ValidationUtil.isValidAadhaarNumber(leadDTO.getAadhaarNumber())) {  // Use utility method for Aadhaar validation
-            logger.warn("Invalid Aadhaar number: {}", leadDTO.getAadhaarNumber());
+        if (!ValidationUtil.isValidAadhaarNumber(leadDTO.getAadhaarNumber())) {
+            logger.error("Invalid Aadhaar number: {}", leadDTO.getAadhaarNumber());
             throw new IllegalArgumentException("Aadhaar number must be 12 digits.");
         }
-
-        // Validate Phone Number Format (should be 10 digits)
-        if (!ValidationUtil.isValidPhoneNumber(leadDTO.getPhone())) {  // Use utility method for phone validation
-            logger.warn("Invalid phone number: {}", leadDTO.getPhone());
+        if (!ValidationUtil.isValidPhoneNumber(leadDTO.getPhone())) {
+            logger.error("Invalid phone number: {}", leadDTO.getPhone());
             throw new IllegalArgumentException("Phone number must be 10 digits.");
         }
 
-        // Check for duplicate leads
+        // Check for duplicates
         if (leadsRepository.existsByEmailOrPhoneOrAadhaarNumberOrPanNumber(
                 leadDTO.getEmail(), leadDTO.getPhone(),
                 leadDTO.getAadhaarNumber(), leadDTO.getPanNumber())) {
-            logger.warn("Duplicate lead found with email: {}", leadDTO.getEmail());
+            logger.warn("Duplicate lead detected with email: {}, phone: {}, Aadhaar: {}, PAN: {}", 
+                leadDTO.getEmail(), leadDTO.getPhone(), leadDTO.getAadhaarNumber(), leadDTO.getPanNumber());
             throw new DuplicateLeadException("A lead with this email, phone, Aadhaar, or PAN already exists.");
         }
 
-        // Create Lead
-        Lead lead = new Lead();
-        lead.setFirstName(leadDTO.getFirstName());
-        lead.setLastName(leadDTO.getLastName());
-        lead.setEmail(leadDTO.getEmail());
-        lead.setPhone(leadDTO.getPhone());
-        lead.setPanNumber(leadDTO.getPanNumber());
-        lead.setAadhaarNumber(leadDTO.getAadhaarNumber());
-        lead.setSource(leadDTO.getSource());
-        lead.setLoanType(leadDTO.getLoanType());
-        lead.setAmount(leadDTO.getAmount());
-        lead.setTenureMonths(leadDTO.getTenureMonths());
-        lead.setPurpose(leadDTO.getPurpose());
+        // Create lead and save
+        Lead lead = LeadMapper.toEntity(leadDTO);
         lead.setStatus("NEW");
         lead.setCreatedAt(LocalDateTime.now());
         lead.setSubmittedAt(LocalDateTime.now());
-        
+
         Integer creditScore = creditScoreService.fetchCreditScoreByPan(leadDTO.getPanNumber());
-        lead.setCreditScore(creditScore); 
+        lead.setCreditScore(creditScore);
 
         Lead savedLead = leadsRepository.save(lead);
         savedLead.setDisplayid("IBVL100" + savedLead.getLeadsId());
@@ -109,76 +92,92 @@ public class LeadsServiceImpl implements LeadsService {
         otpEntity.setExpiryTime(expiryTime);
         otpEntity.setCreatedAt(LocalDateTime.now());
         otpEntity.setUpdatedAt(LocalDateTime.now());
-
         otpRepository.save(otpEntity);
-        emailService.sendOtpEmail(savedLead.getEmail(), otp);
 
-        logger.info("OTP {} generated for email {} and expires at {}", otp, savedLead.getEmail(), expiryTime);
-        return savedLead.getLeadsId();
+        emailService.sendOtpEmail(savedLead.getEmail(), otp);
+        logger.info("OTP {} sent to lead with email: {}", otp, savedLead.getEmail());
+
+        return LeadMapper.toDto(savedLead);
     }
 
     @Override
-    public String verifyOtp(Integer leadsId, String inputOtp) {
+    public LeadVerificationResponseDTO verifyOtp(Integer leadsId, String inputOtp) {
+        logger.info("Verifying OTP for Lead ID: {}", leadsId);
+        logger.info("Entered OTP: {}", inputOtp); // Log the OTP entered by the user
+
         Optional<Otp> optionalOtp = otpRepository.findTopByLead_LeadsIdOrderByCreatedAtDesc(leadsId);
 
         if (optionalOtp.isEmpty()) {
-            logger.debug("No OTP found for lead ID: {}", leadsId);
-            return OtpVerificationStatus.NOT_FOUND.getMessage();
+            logger.warn("No OTP found for Lead ID {}", leadsId);
+            return new LeadVerificationResponseDTO("No OTP found for the provided Lead ID.", leadsId, null, null, null);
         }
 
         Otp otp = optionalOtp.get();
-        logger.debug("Stored OTP: {}, Entered OTP: {}", otp.getOtpValue(), inputOtp);
 
         if (otp.getExpiryTime().isBefore(LocalDateTime.now())) {
-            logger.debug("OTP expired at {}", otp.getExpiryTime());
-            return OtpVerificationStatus.EXPIRED.getMessage();
+            logger.warn("OTP expired for Lead ID {}: OTP expired at {}", leadsId, otp.getExpiryTime());
+            return new LeadVerificationResponseDTO("OTP has expired for Lead ID " + leadsId + ". Please request a new OTP.", leadsId, null, null, null);
         }
 
         if (!otp.getOtpValue().equals(inputOtp)) {
-            logger.debug("OTP mismatch.");
-            return OtpVerificationStatus.INVALID.getMessage();
+            logger.warn("Invalid OTP for Lead ID {}: Expected {}, but got {}", leadsId, otp.getOtpValue(), inputOtp);
+            return new LeadVerificationResponseDTO("Invalid OTP entered for Lead ID " + leadsId + ". Please try again.", leadsId, null, null, null);
         }
 
-        // Log the OTP verification success
-        logger.info("OTP successfully verified for lead ID: {}", leadsId);
-
+        // Proceed with lead update after successful OTP verification
         Optional<Lead> leadOpt = leadsRepository.findById(leadsId);
-        if (leadOpt.isPresent()) {
-            Lead lead = leadOpt.get();
-            boolean creditScoreAvailable = lead.getCreditScore() != null;
-
-            // Handle lead status based on credit score availability
-            if (creditScoreAvailable) {
-                lead.setStatus("LEAD GENERATED");
-                leadsRepository.save(lead);
-
-                logger.info("Lead ID {} has a valid credit score. Proceeding with lead assignment.", leadsId);
-
-                // Call the lead assignment method
-                leadAssignmentService.assignLeadToAgent(leadsId);
-
-                // Log the lead assignment success after assigning to an agent
-                lead.setStatus("LEAD ASSIGNED");
-                leadsRepository.save(lead);
-
-                logger.info("Lead ID {} successfully assigned to agent.", leadsId);
-            } else {
-                lead.setStatus("OTP VERIFIED");
-                leadsRepository.save(lead);
-                logger.info("Lead ID {} OTP verified. Credit score not yet available.", leadsId);
-            }
+        if (leadOpt.isEmpty()) {
+            logger.warn("Lead not found for Lead ID {}", leadsId);
+            return new LeadVerificationResponseDTO("No lead found with the provided Lead ID: " + leadsId, leadsId, null, null, null);
         }
 
-        return OtpVerificationStatus.SUCCESS.getMessage();
+        Lead lead = leadOpt.get();
+
+        if (lead.getCreditScore() != null) {
+            lead.setStatus("LEAD GENERATED");
+            leadsRepository.save(lead);
+
+            // Assign agent
+            LeadAssignmentResponseDTO assignmentDTO = leadAssignmentService.assignLeadToAgent(leadsId);
+            LocalDateTime expectedContactTime = assignmentDTO.getAssigned_at().plusHours(2);
+
+            lead.setStatus("LEAD ASSIGNED");
+            leadsRepository.save(lead);
+
+            String body = String.format(
+                "Dear %s,\n\nYour loan application (Lead ID: %d) has been assigned to Agent ID: %d.\n" +
+                "You can expect a call or email by: %s.\n\nThanks,\nImperaCred Team",
+                lead.getFirstName(), leadsId, assignmentDTO.getAgent_id(), expectedContactTime
+            );
+            emailService.sendSimpleEmail(lead.getEmail(), "Agent Assigned", body);
+
+            // Log agent assignment details
+            logger.info("Lead ID {} assigned to Agent ID: {}. Expected contact time: {}", leadsId, assignmentDTO.getAgent_id(), expectedContactTime);
+
+            return new LeadVerificationResponseDTO(
+                "OTP verified successfully. Your application has been assigned to an agent.",
+                leadsId,
+                assignmentDTO.getAgent_id(),
+                assignmentDTO.getAssigned_at(),
+                expectedContactTime
+            );
+        } else {
+            lead.setStatus("OTP VERIFIED");
+            leadsRepository.save(lead);
+
+            logger.info("OTP verified successfully for Lead ID {}. Credit score pending.", leadsId);
+
+            return new LeadVerificationResponseDTO("OTP verified successfully. Credit score is pending.", leadsId, null, null, null);
+        }
     }
-
-
 
     @Override
     public String resendOtp(String email) {
         logger.info("Resending OTP to email: {}", email);
+
         Optional<Lead> leadOpt = leadsRepository.findByEmail(email);
         if (leadOpt.isEmpty()) {
+            logger.error("No lead found with email: {}", email);
             throw new RuntimeException("No lead found with this email.");
         }
 
@@ -188,6 +187,7 @@ public class LeadsServiceImpl implements LeadsService {
 
         Optional<Otp> existingOtp = otpRepository.findByLead_LeadsId(lead.getLeadsId());
         Otp otpEntity = existingOtp.orElse(new Otp());
+
         otpEntity.setLead(lead);
         otpEntity.setOtpValue(otp);
         otpEntity.setExpiryTime(expiryTime);
@@ -207,6 +207,4 @@ public class LeadsServiceImpl implements LeadsService {
         SecureRandom random = new SecureRandom();
         return String.valueOf(100000 + random.nextInt(900000));
     }
-
-   
 }

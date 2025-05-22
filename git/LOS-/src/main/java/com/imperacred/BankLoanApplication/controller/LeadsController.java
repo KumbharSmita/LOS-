@@ -1,5 +1,6 @@
 package com.imperacred.BankLoanApplication.controller;
 
+import com.imperacred.BankLoanApplication.dto.LeadVerificationResponseDTO;
 import com.imperacred.BankLoanApplication.dto.LeadsDTO;
 import com.imperacred.BankLoanApplication.dto.OtpRequestDTO;
 import com.imperacred.BankLoanApplication.dto.OtpVerificationDTO;
@@ -28,20 +29,19 @@ public class LeadsController {
     @PostMapping("/create")
     public ResponseEntity<?> createLead(@Valid @RequestBody LeadsDTO leadDTO) {
         logger.info("Received Create Lead Request: {}", leadDTO);
-
         try {
-            int leadId = leadsService.createLead(leadDTO);
-            Map<String, Object> response = new HashMap<>();
-            response.put("leads_id", leadId);
-            response.put("message", "Lead created and OTP sent successfully.");
-            response.put("lead", leadDTO); // Optionally include the lead data for feedback
-            logger.info("Response: {} | leadsId: {}", response, leadId);
-            return ResponseEntity.ok(response);
+            LeadsDTO createdLead = leadsService.createLead(leadDTO);
+            return ResponseEntity.ok(Map.of(
+                "message", "Lead created and OTP sent successfully.",
+                "lead", createdLead
+            ));
         } catch (Exception e) {
             logger.error("Error while creating lead: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of("error", "Failed to create lead or send OTP."));
         }
     }
+
+
 
     // POST /verify-otp - Verify OTP
     @PostMapping("/verify-otp")
@@ -49,16 +49,15 @@ public class LeadsController {
         logger.info("Received OTP verification request: {}", request);
 
         try {
-            // First, verify the OTP and get the status message
-            String result = leadsService.verifyOtp(request.getLeads_id(), request.getOtp_value());
-            
+            // First, verify the OTP and get the response DTO
+            LeadVerificationResponseDTO responseDTO = leadsService.verifyOtp(request.getLeads_id(), request.getOtp_value());
 
-            if (OtpVerificationStatus.SUCCESS.getMessage().equals(result)) {
-                // If OTP is valid, proceed with success response
-                return ResponseEntity.ok(Map.of("message", "OTP verified successfully."));
+            // If OTP is successfully verified, proceed with success response
+            if ("OTP verified successfully. Your application has been assigned to an agent.".equals(responseDTO.getMessage())) {
+                return ResponseEntity.ok(responseDTO);
             } else {
-                // If OTP is invalid or expired, return bad request with the result
-                return ResponseEntity.badRequest().body(Map.of("message", result));
+                // If OTP is invalid or expired, return bad request with the failure message
+                return ResponseEntity.badRequest().body(Map.of("message", responseDTO.getMessage()));
             }
         } catch (Exception e) {
             // Log any error encountered during OTP verification
@@ -66,6 +65,7 @@ public class LeadsController {
             return ResponseEntity.status(500).body(Map.of("error", "Internal error during OTP verification."));
         }
     }
+
 
 
     // POST /resend-otp - Resend OTP
