@@ -1,0 +1,22 @@
+package com.imperacred.BankLoanApplication.dto;
+
+import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * Data Transfer Object for Documents.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class DocumentsDTO {
+    private Integer document_id;     // Unique ID for the document
+    private Integer leads_id;        // Associated lead ID
+    private String document_type;    // Type of document (e.g., Aadhaar, PAN)
+    private String file_path;        // Path to stored file on disk
+    private LocalDateTime uploaded_at; // Timestamp when uploaded
+}
