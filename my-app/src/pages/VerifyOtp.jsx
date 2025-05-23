@@ -1,6 +1,6 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { verifyOtp, resendOtp } from '../api/auth';
+import { verifyOtp, resendOtp } from '../api/auth'; // make sure these APIs exist
 
 export default function VerifyOtp() {
   const location = useLocation();
@@ -10,34 +10,35 @@ export default function VerifyOtp() {
   const [otp, setOtp] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false); // Track successful OTP verification
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  // Automatically navigate to /success after 2 seconds if OTP is verified
- useEffect(() => {
-    if (otpVerified) {
-      const timer = setTimeout(() => {
-        navigate('/success'); // Redirect to success page
-      }, 2000); // Delay 2 seconds
+  if (!leads_id || !email) {
+    return <div className="text-red-600 p-4">Missing lead data. Please start again from lead form.</div>;
+  }
 
-      return () => clearTimeout(timer); // Clean up the timer when the component is unmounted or otpVerified changes
-    }
-  }, [otpVerified, navigate]); 
-
-  //  Handle OTP verification
   const handleVerify = async (e) => {
     e.preventDefault();
     setMessage('');
+    setIsSuccess(false);
     setLoading(true);
 
     try {
-      const response = await verifyOtp(leads_id, String(otp)); // Ensure OTP is sent as string
-      console.log('verifyOtp response:', response);
-
+      const response = await verifyOtp(leads_id, String(otp));
       const result = response?.data || response;
 
-      if (result?.status?.toLowerCase() === 'success') {
-        setMessage('OTP verified successfully.');
-        setOtpVerified(true);
+      // Check if backend message indicates success
+      if (result?.message?.toLowerCase().includes('success')) {
+        setIsSuccess(true);
+        setMessage(result.message);
+
+        // Navigate to success page with data from response
+        navigate('/success', {
+          state: {
+            agentInfo: result.agentId,
+            expectedContactTime: result.expectedContactTime,
+            message: result.message
+          }
+        });
       } else {
         setMessage(result?.message || 'OTP verification failed.');
       }
@@ -48,26 +49,18 @@ export default function VerifyOtp() {
     }
   };
 
-  
   const handleResend = async () => {
     setLoading(true);
+    setMessage('');
     try {
       const response = await resendOtp(email);
-      console.log('resendOtp response:', response);
-
-      const result = response?.data || response;
-      setMessage(result?.message || 'OTP resent.');
+      setMessage(response?.message || 'OTP resent successfully.');
     } catch (err) {
-      setMessage('Error: ' + (err?.message || 'Failed to resend OTP'));
+      setMessage('Error: ' + (err?.message || 'Failed to resend OTP.'));
     } finally {
       setLoading(false);
     }
   };
-
-  
-  if (!leads_id || !email) {
-    return <div className="text-red-600 p-4">Missing lead data.</div>;
-  }
 
   return (
     <div className="max-w-md mx-auto mt-20 p-6 border rounded shadow bg-white">
@@ -104,7 +97,7 @@ export default function VerifyOtp() {
       {message && (
         <p
           className={`mt-4 text-center text-sm ${
-            otpVerified ? 'text-green-600' : 'text-red-600'
+            isSuccess ? 'text-green-600' : 'text-red-600'
           }`}
         >
           {message}

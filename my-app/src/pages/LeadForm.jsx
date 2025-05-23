@@ -18,6 +18,8 @@ export default function LeadForm() {
     purpose: ''
   });
 
+  const [consentGiven, setConsentGiven] = useState(false);
+
   const validateFields = () => {
     const { email, phone, aadhaarNumber } = lead;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,12 +33,14 @@ export default function LeadForm() {
     e.preventDefault();
     const error = validateFields();
     if (error) return alert(error);
+    if (!consentGiven) return alert("Please provide consent to proceed.");
 
     try {
       const response = await createLead(lead);
       alert('Lead created! OTP sent to your email.');
+
       navigate('/verify-otp', {
-        state: { leads_id: response.leads_id, email: lead.email }
+        state: { leads_id: response.lead.leadsId, email: lead.email }
       });
     } catch (error) {
       alert("Error creating lead: " + (error?.response?.data || error.message));
@@ -58,7 +62,25 @@ export default function LeadForm() {
             required
           />
         ))}
-        <button type="submit" className="w-full p-3 bg-blue-600 text-white rounded hover:bg-blue-700">
+
+        {/* Consent checkbox */}
+        <div className="mb-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={consentGiven}
+              onChange={(e) => setConsentGiven(e.target.checked)}
+            />
+            <span className="text-sm">
+              I agree to the terms and authorize ImperaCred to process my personal data.
+            </span>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          className="w-full p-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
           Submit
         </button>
       </form>
