@@ -14,7 +14,7 @@ public class EmailServiceImpl implements EmailService {
     private static final Logger logger = LogManager.getLogger(EmailServiceImpl.class);  // Logger for the class
 
     @Autowired
-    private JavaMailSender javaMailSender;  // Used to send email via SMTP
+    private JavaMailSender javaMailSender;  
 
     @Override
     public void sendEmail(String toEmail, String subject, String message) {
@@ -63,5 +63,21 @@ public class EmailServiceImpl implements EmailService {
             logger.error("Failed to send  email to: {}", email, e);  // Log error with exception details
         }
     }
+    @Override
+    public void sendDisbursementOtpEmail(String email, String name, String otp, boolean isResend) {
+        String subject = isResend ? "Your OTP for Loan Disbursement - Resent" : "Your OTP for Loan Disbursement";
+        
+        String message = "Dear " + name + ",\n\n"
+                + "Thank you for choosing Imperacred for your loan needs.\n\n"
+                + "To proceed with the disbursement of your approved loan, please use the following  (OTP):\n\n"
+                + " OTP: " + otp + "\n\n"
+                + "This OTP is valid for the next 2 minutes only. Please do not share it with anyone.\n\n"
+                + "If you did not request this OTP, please contact our support team immediately.\n\n"
+                + "Best regards,\n"
+                + "Imperacred Bank Loan Application Team";
+
+        sendEmail(email, subject, message);
+    }
+
 
 }

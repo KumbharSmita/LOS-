@@ -15,17 +15,11 @@ public interface OtpRepository extends JpaRepository<Otp, Integer> {
 
 	
 
-	Optional<Otp> findTopByOrderByCreatedAtDesc();
-
-
-
-
-	Optional<Otp> findTopByLead_LeadsIdOrderByCreatedAtDesc(Integer leadsId);
-
-
-
-
-	Optional<Otp> findByLead_LeadsId(Integer leadsId);
+//	Optional<Otp> findTopByOrderByCreatedAtDesc();
+//
+//	Optional<Otp> findTopByLead_LeadsIdOrderByCreatedAtDesc(Integer leadsId);
+//
+//	Optional<Otp> findByLead_LeadsId(Integer leadsId);
 	
-
+	  Optional<Otp> findTopByLead_LeadsIdAndOtpTypeOrderByCreatedAtDesc(Integer leadsId, String otpType);
 }

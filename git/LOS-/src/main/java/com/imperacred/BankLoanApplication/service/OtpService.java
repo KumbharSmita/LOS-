@@ -1,13 +1,7 @@
-//package com.imperacred.BankLoanApplication.service;
-//
-//import com.imperacred.BankLoanApplication.dto.OtpDTO;
-//import com.imperacred.BankLoanApplication.dto.OtpRequest;
-//import com.imperacred.BankLoanApplication.dto.OtpVerificationRequest;
-//
-//public interface OtpService {
-//    OtpDTO generateOtp(OtpRequest request);
-//    OtpDTO verifyOtp(OtpVerificationRequest request);
-//}
-//
-//
-//
+package com.imperacred.BankLoanApplication.service;
+
+public interface OtpService {
+	 String generateOtpForLead(Integer leadsId, String otpType);
+	    boolean verifyOtpForLead(Integer leadsId, String otpType, String inputOtp);
+	    String resendOtpForLead(Integer leadsId, String otpType);
+}

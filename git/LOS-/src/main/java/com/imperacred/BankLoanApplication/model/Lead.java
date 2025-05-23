@@ -81,6 +81,9 @@ public class Lead {
     
     @Column(name="confirmed_tenure_months")
     private Integer confirmedTenureMonths;
+    
+    @Column(name = "disbursement_otp_status")
+    private String disbursementOtpStatus;
 
     // PrePersist annotation to set createdAt before saving a new entity
     @PrePersist

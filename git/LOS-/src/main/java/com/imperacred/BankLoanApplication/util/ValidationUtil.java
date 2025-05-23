@@ -22,4 +22,18 @@ public class ValidationUtil {
     public static boolean isValidPhoneNumber(String phone) {
         return phone != null && phone.matches("\\d{10}");
     }
+    
+    public static boolean isValidPanNumber(String panNumber) {
+        if (panNumber == null) {
+            return false;
+        }
+        String panRegex = "[A-Z]{5}[0-9]{4}[A-Z]{1}";
+        Pattern pattern = Pattern.compile(panRegex);
+        Matcher matcher = pattern.matcher(panNumber);
+        return matcher.matches();
+    }
+    
+    public static boolean isValidBankAccount(String account) {
+        return account != null && account.matches("\\d{9,18}");
+    }
 }

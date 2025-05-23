@@ -9,6 +9,9 @@ public interface EmailService {
     void sendOtpEmail(String email, String otp);
 
 	void sendSimpleEmail(String email, String string, String body);
+	
+	void sendDisbursementOtpEmail(String email, String name, String otp, boolean isResend);
+
     
 }
 

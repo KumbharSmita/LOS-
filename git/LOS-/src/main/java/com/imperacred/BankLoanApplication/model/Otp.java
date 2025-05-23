@@ -27,7 +27,9 @@ public class Otp {
     // Mapping Many-to-One relationship with Lead
     @ManyToOne
     @JoinColumn(name = "leads_id")
-    private Lead lead;  // Instead of just leadsId, we use the full Lead object
+    private Lead lead;  
+    @Column(name = "otp_type")
+    private String otpType;
 
     @Column(name = "otp_value", nullable = false)
     private String otpValue;
