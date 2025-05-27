@@ -1,28 +1,92 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../api/userApi';
+import { getLeadStatus } from '../api/underwritingApi';
+import { getDisbursementByLeadId } from '../api/disbursement';
+import { getEmiSchedule } from '../api/loans';
 
 const UserLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false); // Track if the form is being submitted
-  const [errorMessage, setErrorMessage] = useState(''); // For handling backend errors
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true); // Disable button when submitting
-    setErrorMessage(''); // Reset any previous error message
+    setIsSubmitting(true);
+    setErrorMessage('');
 
     try {
+      // Login API call
       const response = await loginUser(formData);
-      alert(response.data); // e.g., "Login successful for: email"
+      alert(response.data.message);
       localStorage.setItem('userEmail', formData.email);
-      navigate('/lead-form');
+
+      // Step 1: Get Lead Status
+      let data;
+      try {
+        const statusResponse = await getLeadStatus(formData.email);
+        data = statusResponse.data;
+      } catch {
+        data = null;
+      }
+
+      // If no lead, redirect to lead form
+      if (!data || !data.leadsId) {
+        navigate('/lead-form');
+        return;
+      }
+
+      // Step 2: Check disbursement status
+      let disbursementData = null;
+      try {
+        disbursementData = await getDisbursementByLeadId(data.leadsId);
+      } catch {
+        disbursementData = null;
+      }
+
+      if (disbursementData && disbursementData.status === 'SUCCESS') {
+        // Step 3: Fetch EMI schedule if disbursed
+        let emiSchedule = [];
+        try {
+          emiSchedule = await getEmiSchedule(data.leadsId);
+        } catch {
+          emiSchedule = [];
+        }
+
+        navigate('/disbursement-status', {
+          state: { disbursement: disbursementData, emiSchedule },
+        });
+        return;
+      }
+
+      // Step 4: If underwriting decision available
+      if (data.decision) {
+        navigate('/underwriting-result', {
+          state: {
+            leadsId: data.leadsId,
+            decision: data.decision,
+            riskRating: data.riskRating,
+            approvedAmount: data.approvedAmount,
+            underwriterNotes: data.underwriterNotes,
+            evaluatedAt: data.evaluatedAt,
+          },
+        });
+        return;
+      }
+
+      // Step 5: Otherwise, go to lead status (likely pending)
+      navigate('/lead-status', {
+        state: {
+          leadsId: data.leadsId,
+          status: data.status || 'Pending',
+        },
+      });
     } catch (err) {
       console.error(err);
       setErrorMessage('Login failed. Please check your credentials and try again.');
     } finally {
-      setIsSubmitting(false); // Re-enable the button
+      setIsSubmitting(false);
     }
   };
 
@@ -31,7 +95,6 @@ const UserLogin = () => {
       <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">User Login</h2>
 
       <form onSubmit={handleLogin} className="space-y-4">
-        {/* Error message */}
         {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
 
         <div>
@@ -70,6 +133,13 @@ const UserLogin = () => {
           {isSubmitting ? 'Logging in...' : 'Login'}
         </button>
       </form>
+
+      <p className="mt-4 text-center">
+        Not registered yet?{' '}
+        <Link to="/user-register" className="text-blue-600 hover:underline">
+          Register here
+        </Link>
+      </p>
     </div>
   );
 };

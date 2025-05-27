@@ -9,8 +9,8 @@ export const registerUser = (userData) => {
 };
 
 // Logs in a user (POST /api/user-login/login)
-export const loginUser = (credentials) => {
-  return axios.post(`${BASE_URL}/user-login/login`, credentials);
+export const loginUser = (formData) => {
+  return axios.post(`${BASE_URL}/user-login/login`, formData);
 };
 
 // Fetch user by email (GET /api/user-login/get-by-email?email=...)

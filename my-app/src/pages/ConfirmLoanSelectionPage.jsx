@@ -1,12 +1,42 @@
-import React, { useState } from 'react';
-import { confirmLoanSelection } from '../api/borrowerSelection';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { confirmLoanSelection, getLoanConfirmation } from '../api/borrowerSelection';
 
 const ConfirmLoanSelectionPage = () => {
-  const [leadId, setLeadId] = useState('');
-  const [amount, setAmount] = useState('');
+  const location = useLocation();
+  const { leadId: passedLeadId, approvedAmount: passedApprovedAmount } = location.state || {};
+
+  const [leadId, setLeadId] = useState(passedLeadId || '');
+  const [amount, setAmount] = useState(passedApprovedAmount || '');
   const [tenure, setTenure] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (leadId) {
+      getLoanConfirmation(parseInt(leadId))
+        .then(data => {
+          if (data?.confirmedAmount && data?.confirmedTenureMonths) {
+            setResult(data);
+            setIsConfirmed(true);
+            setAmount(data.confirmedAmount);
+            setTenure(data.confirmedTenureMonths);
+          }
+        })
+        .catch(err => {
+          if (err.response && err.response.status === 204) {
+            // No confirmation yet, proceed normally
+          } else {
+            setError('Failed to fetch loan confirmation status.');
+          }
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [leadId]);
 
   const handleConfirm = async () => {
     setError('');
@@ -17,10 +47,13 @@ const ConfirmLoanSelectionPage = () => {
       };
       const data = await confirmLoanSelection(parseInt(leadId), payload);
       setResult(data);
+      setIsConfirmed(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Loan selection confirmation failed.');
     }
   };
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -35,6 +68,7 @@ const ConfirmLoanSelectionPage = () => {
             onChange={(e) => setLeadId(e.target.value)}
             className="w-full border p-2 rounded"
             placeholder="Enter Lead ID"
+            disabled={!!passedLeadId || isConfirmed} // disable if passed or already confirmed
           />
         </div>
 
@@ -46,6 +80,7 @@ const ConfirmLoanSelectionPage = () => {
             onChange={(e) => setAmount(e.target.value)}
             className="w-full border p-2 rounded"
             placeholder="Enter Amount"
+            disabled={isConfirmed}
           />
         </div>
 
@@ -57,19 +92,25 @@ const ConfirmLoanSelectionPage = () => {
             onChange={(e) => setTenure(e.target.value)}
             className="w-full border p-2 rounded"
             placeholder="Enter Tenure"
+            disabled={isConfirmed}
           />
         </div>
 
         <button
           onClick={handleConfirm}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          disabled={isConfirmed}
+          className={`px-4 py-2 rounded transition ${
+            isConfirmed
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-green-600 text-white hover:bg-green-700'
+          }`}
         >
-          Confirm Selection
+          {isConfirmed ? 'Already Confirmed' : 'Confirm Selection'}
         </button>
 
         {error && <p className="text-red-600 mt-4">{error}</p>}
 
-        {result?.confirmedAmount && (
+        {result && (
           <div className="mt-6 p-4 bg-gray-50 rounded shadow">
             <h3 className="font-semibold text-lg mb-2">Confirmation Successful</h3>
             <p><strong>Confirmed Amount:</strong> ₹{result.confirmedAmount}</p>
