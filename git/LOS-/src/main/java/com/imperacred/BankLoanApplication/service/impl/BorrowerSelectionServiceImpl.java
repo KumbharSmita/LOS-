@@ -29,6 +29,12 @@ public class BorrowerSelectionServiceImpl implements BorrowerSelectionService {
                     return new RuntimeException("Lead not found with ID: " + leadsId);
                 });
 
+        // Check if confirmation already exists
+        if ("Confirmed by Borrower".equalsIgnoreCase(lead.getStatus())) {
+            logger.warn("Duplicate confirmation attempt for Lead ID: {}", leadsId);
+            throw new IllegalStateException("Loan selection has already been confirmed by the borrower.");
+        }
+
         BigDecimal maxApprovedAmount = new BigDecimal(lead.getAmount());
         Integer maxApprovedTenure = lead.getTenureMonths();
 
@@ -65,4 +71,16 @@ public class BorrowerSelectionServiceImpl implements BorrowerSelectionService {
 
         return borrowerSelectionDTO;
     }
+    @Override
+    public BorrowerSelectionDTO getLoanConfirmationByLeadId(Integer leadsId) {
+        Lead lead = leadRepository.findById(leadsId)
+                .orElseThrow(() -> new RuntimeException("Lead not found with ID: " + leadsId));
+
+        BorrowerSelectionDTO dto = new BorrowerSelectionDTO();
+        dto.setConfirmedAmount(lead.getConfirmedAmount());
+        dto.setConfirmedTenureMonths(lead.getConfirmedTenureMonths());
+
+        return dto;
+    }
+
 }

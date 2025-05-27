@@ -1,6 +1,8 @@
 
 package com.imperacred.BankLoanApplication.controller;
 
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +27,13 @@ public class UserLoginController {
         logger.info("Login attempt for email: {}", loginDTO.getEmail());
         try {
             UserRegistration user = userLoginService.validateUserLogin(loginDTO.getEmail(), loginDTO.getPassword());
-            return ResponseEntity.ok("Login successful for: " + user.getEmail());
+            return ResponseEntity.ok(Map.of("message", "Login successful", "email", user.getEmail()));
         } catch (RuntimeException e) {
             logger.warn("Login failed: {}", e.getMessage());
-            return ResponseEntity.status(401).body("Invalid credentials");
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
     }
+
     
     @GetMapping("/get-by-email")
     public ResponseEntity<?> getUserByEmail(@RequestParam String email) {

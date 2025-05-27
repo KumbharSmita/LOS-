@@ -60,7 +60,7 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
         agentLoadsRepo.save(agentLoads);
 
         LeadAssignments assignment = new LeadAssignments();
-        assignment.setLeads_id(leads_id);
+        assignment.setLeadsId(leads_id);
         assignment.setAgentId(agentLoads.getAgent_id());
         assignment.setAssigned_at(LocalDateTime.now());
         assignment.setStatus("ASSIGNED");
@@ -98,9 +98,9 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
 
         return assignments.stream()
             .map(assignment -> {
-                Optional<Lead> optionalLead = leadsRepo.findById(assignment.getLeads_id());
+                Optional<Lead> optionalLead = leadsRepo.findById(assignment.getLeadsId());
                 if (optionalLead.isEmpty()) {
-                    logger.warn("Lead not found for ID: {}", assignment.getLeads_id());
+                    logger.warn("Lead not found for ID: {}", assignment.getLeadsId());
                     return null;
                 }
 
@@ -139,7 +139,7 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
 
         return leadAssignmentRepo.findByAgentId(agentId).stream()
             .map(assignment -> {
-                Optional<Lead> leadOpt = leadsRepo.findById(assignment.getLeads_id());
+                Optional<Lead> leadOpt = leadsRepo.findById(assignment.getLeadsId());
                 if (leadOpt.isEmpty()) return null;
                 Lead lead = leadOpt.get();
                 if (!lead.getStatus().equalsIgnoreCase(status)) return null;

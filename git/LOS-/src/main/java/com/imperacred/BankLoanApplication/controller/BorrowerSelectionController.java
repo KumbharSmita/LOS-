@@ -42,4 +42,19 @@ public class BorrowerSelectionController {
             return ResponseEntity.status(404).body(new BorrowerSelectionDTO());
         }
     }
+    @GetMapping("/{leadsId}")
+    public ResponseEntity<BorrowerSelectionDTO> getLoanConfirmation(@PathVariable Integer leadsId) {
+        try {
+            BorrowerSelectionDTO dto = borrowerSelectionService.getLoanConfirmationByLeadId(leadsId);
+            if (dto.getConfirmedAmount() == null && dto.getConfirmedTenureMonths() == null) {
+                // No confirmation done yet - send 204 No Content or empty DTO
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
+            logger.error("Lead not found error for Lead ID {}: {}", leadsId, e.getMessage());
+            return ResponseEntity.status(404).build();
+        }
+    }
+
 }

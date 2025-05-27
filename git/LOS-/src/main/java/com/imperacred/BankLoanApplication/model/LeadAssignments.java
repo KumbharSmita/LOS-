@@ -21,7 +21,9 @@ import lombok.NoArgsConstructor;
 	    @Id
 	    @GeneratedValue(strategy = GenerationType.IDENTITY)
 	    private int lead_assignment_id;
-	    private Integer leads_id;
+
+	    @Column(name = "leads_id")
+	    private Integer leadsId;  
 	    @Column(name="agent_id")
 	    private Integer agentId;
 	    private LocalDateTime assigned_at;

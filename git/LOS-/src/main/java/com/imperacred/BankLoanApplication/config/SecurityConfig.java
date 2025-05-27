@@ -40,14 +40,15 @@ public class SecurityConfig {
                 "/api/user-login/**",
                 "/api/leads/**",
                 "/api/lead-assignments/**",
-                "/api/underwriting/**",
+                
                 "/api/loans/**",
                 "/api/disbursements/**",
-                "/api/borrower-selection/**"
+                "/api/borrower-selection/**",
+                "/api/underwriting/lead-status"
             ).permitAll()
                 .requestMatchers("/api/lead-status-history/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/api/agent-activity/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-
+                .requestMatchers("/api/underwriting/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             .and()
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

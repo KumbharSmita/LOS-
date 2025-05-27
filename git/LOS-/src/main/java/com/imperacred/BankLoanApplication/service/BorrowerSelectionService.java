@@ -5,4 +5,7 @@ import com.imperacred.BankLoanApplication.dto.LeadsDTO;
 
 public interface BorrowerSelectionService {
 	BorrowerSelectionDTO confirmLoanSelection(Integer leadsId, BorrowerSelectionDTO selectionDTO);
+
+	BorrowerSelectionDTO getLoanConfirmationByLeadId(Integer leadsId);
 }
+
