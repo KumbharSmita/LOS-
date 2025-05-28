@@ -8,6 +8,8 @@ import {
 const UnderwritingPage = () => {
   const [leadId, setLeadId] = useState('');
   const [approvedAmount, setApprovedAmount] = useState('');
+  const [rateOfInterest, setRateOfInterest] = useState('');
+  const [tenureMonths, setTenureMonths] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [allResults, setAllResults] = useState([]);
@@ -17,10 +19,17 @@ const UnderwritingPage = () => {
   const handleUnderwrite = async () => {
     setError('');
     try {
-      const data = await performUnderwriting(parseInt(leadId), parseFloat(approvedAmount));
+      const data = await performUnderwriting(
+        parseInt(leadId),
+        parseFloat(approvedAmount),
+        parseFloat(rateOfInterest),
+        parseInt(tenureMonths)
+      );
       setResult(data);
       setLeadId('');
       setApprovedAmount('');
+      setRateOfInterest('');
+      setTenureMonths('');
     } catch (err) {
       setError(err.response?.data?.message || 'Underwriting failed');
     }
@@ -77,6 +86,26 @@ const UnderwritingPage = () => {
           />
         </div>
 
+        <div>
+          <label className="block mb-1 font-medium">Rate of Interest (%)</label>
+          <input
+            type="number"
+            value={rateOfInterest}
+            onChange={(e) => setRateOfInterest(e.target.value)}
+            className="w-full border p-2 rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Tenure (Months)</label>
+          <input
+            type="number"
+            value={tenureMonths}
+            onChange={(e) => setTenureMonths(e.target.value)}
+            className="w-full border p-2 rounded"
+          />
+        </div>
+
         <button
           onClick={handleUnderwrite}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
@@ -118,6 +147,9 @@ const UnderwritingPage = () => {
                 <p><strong>Approved Amount:</strong> ₹{singleResult.approvedAmount}</p>
                 <p><strong>Notes:</strong> {singleResult.underwriterNotes}</p>
                 <p><strong>Evaluated At:</strong> {new Date(singleResult.evaluatedAt).toLocaleString()}</p>
+                <p><strong>Agent ID:</strong> {singleResult.agentId}</p>
+                <p><strong>Tenure (Months):</strong> {singleResult.tenureMonths}</p>
+                <p><strong>Rate of Interest:</strong> {singleResult.rateOfInterest}%</p>
               </div>
             )}
           </div>
@@ -134,6 +166,9 @@ const UnderwritingPage = () => {
                   <p><strong>Approved Amount:</strong> ₹{res.approvedAmount}</p>
                   <p><strong>Notes:</strong> {res.underwriterNotes}</p>
                   <p><strong>Evaluated At:</strong> {new Date(res.evaluatedAt).toLocaleString()}</p>
+                  <p><strong>Agent ID:</strong> {res.agentId}</p>
+                  <p><strong>Tenure (Months):</strong> {res.tenureMonths}</p>
+                  <p><strong>Rate of Interest:</strong> {res.rateOfInterest}%</p>
                 </div>
               ))
             ) : (
@@ -153,6 +188,9 @@ const UnderwritingPage = () => {
             <p><strong>Approved Amount:</strong> ₹{result.approvedAmount}</p>
             <p><strong>Notes:</strong> {result.underwriterNotes}</p>
             <p><strong>Evaluated At:</strong> {new Date(result.evaluatedAt).toLocaleString()}</p>
+            <p><strong>Agent ID:</strong> {result.agentId}</p>
+            <p><strong>Tenure (Months):</strong> {result.tenureMonths}</p>
+            <p><strong>Rate of Interest:</strong> {result.rateOfInterest}%</p>
           </div>
         )}
       </div>

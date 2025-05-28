@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getRepaymentSchedule } from '../api/repayment';
-import { ClipLoader } from 'react-spinners';
 
 const DisbursementStatus = () => {
   const location = useLocation();
@@ -10,41 +9,31 @@ const DisbursementStatus = () => {
   const { disbursement, emiSchedule } = location.state || {};
 
   const [repaymentSchedule, setRepaymentSchedule] = useState(null);
-  const [loadingSchedule, setLoadingSchedule] = useState(false);
-  const [errorSchedule, setErrorSchedule] = useState('');
-
   const [showEmiSchedule, setShowEmiSchedule] = useState(false);
   const [showRepaymentSchedule, setShowRepaymentSchedule] = useState(false);
 
   useEffect(() => {
     if (!disbursement) {
       navigate('/user-login');
-      return;
     }
   }, [disbursement, navigate]);
 
-  // Fetch repayment schedule only when toggled to show
   useEffect(() => {
-    if (showRepaymentSchedule && !repaymentSchedule && !loadingSchedule) {
-      const fetchRepaymentSchedule = async () => {
-        setLoadingSchedule(true);
-        setErrorSchedule('');
-        try {
-          const schedule = await getRepaymentSchedule(disbursement.leadsId);
-          setRepaymentSchedule(schedule);
-        } catch (err) {
-          setErrorSchedule('Failed to fetch repayment schedule.');
-        } finally {
-          setLoadingSchedule(false);
-        }
-      };
+    const fetchRepaymentSchedule = async () => {
+      try {
+        const schedule = await getRepaymentSchedule(disbursement.leadsId);
+        setRepaymentSchedule(schedule);
+      } catch {
+        setRepaymentSchedule(null);
+      }
+    };
+
+    if (showRepaymentSchedule && !repaymentSchedule) {
       fetchRepaymentSchedule();
     }
-  }, [showRepaymentSchedule, repaymentSchedule, disbursement, loadingSchedule]);
+  }, [showRepaymentSchedule, disbursement, repaymentSchedule]);
 
-  if (!disbursement) {
-    return null;
-  }
+  if (!disbursement) return null;
 
   return (
     <div className="max-w-lg mx-auto mt-10 bg-white p-8 rounded shadow">
@@ -66,17 +55,17 @@ const DisbursementStatus = () => {
         </p>
       </div>
 
-      {/* EMI Schedule toggle button */}
-      {emiSchedule && emiSchedule.length > 0 && (
-        <div className="mt-8">
-          <button
-            onClick={() => setShowEmiSchedule((prev) => !prev)}
-            className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          >
-            {showEmiSchedule ? 'Hide EMI Schedule' : 'Show EMI Schedule'}
-          </button>
+      {/* EMI Schedule Section */}
+      <div className="mt-8">
+        <button
+          onClick={() => setShowEmiSchedule((prev) => !prev)}
+          className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+        >
+          {showEmiSchedule ? 'Hide EMI Schedule' : 'Show EMI Schedule'}
+        </button>
 
-          {showEmiSchedule && (
+        {showEmiSchedule && (
+          Array.isArray(emiSchedule) && emiSchedule.length > 0 ? (
             <table className="w-full border-collapse border border-gray-300 text-sm">
               <thead>
                 <tr>
@@ -99,48 +88,38 @@ const DisbursementStatus = () => {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-      )}
+          ) : (
+            <p className="text-gray-600">EMI schedule not available.</p>
+          )
+        )}
+      </div>
 
-      {/* Repayment Schedule toggle button */}
-      {disbursement?.leadsId && (
-        <div className="mt-10">
-          <button
-            onClick={() => setShowRepaymentSchedule((prev) => !prev)}
-            className="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-          >
-            {showRepaymentSchedule ? 'Hide Repayment Schedule Details' : 'Show Repayment Schedule Details'}
-          </button>
+      {/* Repayment Schedule Section */}
+      <div className="mt-10">
+        <button
+          onClick={() => setShowRepaymentSchedule((prev) => !prev)}
+          className="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+        >
+          {showRepaymentSchedule ? 'Hide Repayment Schedule Details' : 'Show Repayment Schedule Details'}
+        </button>
 
-          {showRepaymentSchedule && (
-            <>
-              {loadingSchedule && (
-                <div className="flex justify-center">
-                  <ClipLoader size={30} color="#3b82f6" />
-                </div>
-              )}
-
-              {errorSchedule && <p className="text-red-600">{errorSchedule}</p>}
-
-              {repaymentSchedule ? (
-                <table className="table-auto w-full text-sm border-collapse border border-gray-300">
-                  <tbody>
-                    {Object.entries(repaymentSchedule).map(([key, value]) => (
-                      <tr key={key} className="border-b border-gray-300">
-                        <td className="border border-gray-300 p-2 font-medium capitalize">{key}</td>
-                        <td className="border border-gray-300 p-2">{String(value)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                !loadingSchedule && <p className="text-gray-600">No repayment schedule available.</p>
-              )}
-            </>
-          )}
-        </div>
-      )}
+        {showRepaymentSchedule && (
+          repaymentSchedule ? (
+            <table className="table-auto w-full text-sm border-collapse border border-gray-300">
+              <tbody>
+                {Object.entries(repaymentSchedule).map(([key, value]) => (
+                  <tr key={key} className="border-b border-gray-300">
+                    <td className="border border-gray-300 p-2 font-medium capitalize">{key}</td>
+                    <td className="border border-gray-300 p-2">{String(value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-gray-600">Repayment schedule not available.</p>
+          )
+        )}
+      </div>
 
       <button
         onClick={() => navigate('/user-login')}

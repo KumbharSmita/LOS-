@@ -22,6 +22,7 @@ import RepaymentSchedulePage from './pages/RepaymentSchedulePage';
 import UserRegister from './pages/UserRegister';
 import UserLogin from './pages/UserLogin';
 
+
 function App() {
   return (
     <Router>
@@ -46,6 +47,8 @@ function App() {
 <Route path="/repayment-schedule" element={<RepaymentSchedulePage />} />
         <Route path="/user-register" element={<UserRegister />} />
         <Route path="/user-login" element={<UserLogin />} />
+      
+
       </Routes>
     </Router>
   );

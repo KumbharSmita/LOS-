@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { confirmLoanSelection, getLoanConfirmation } from '../api/borrowerSelection';
+import {
+  confirmLoanSelection,
+  getLoanConfirmation,
+  generateLoanConfirmationOtp,
+  resendLoanConfirmationOtp
+} from '../api/borrowerSelection';
 
 const ConfirmLoanSelectionPage = () => {
   const location = useLocation();
@@ -9,8 +14,10 @@ const ConfirmLoanSelectionPage = () => {
   const [leadId, setLeadId] = useState(passedLeadId || '');
   const [amount, setAmount] = useState(passedApprovedAmount || '');
   const [tenure, setTenure] = useState('');
+  const [otp, setOtp] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -23,13 +30,16 @@ const ConfirmLoanSelectionPage = () => {
             setIsConfirmed(true);
             setAmount(data.confirmedAmount);
             setTenure(data.confirmedTenureMonths);
+          } else {
+            // Only generate OTP if not confirmed yet
+            generateLoanConfirmationOtp(parseInt(leadId))
+              .then(() => setMessage("OTP sent to your email."))
+              .catch(() => setError("Failed to send OTP."));
           }
         })
         .catch(err => {
-          if (err.response && err.response.status === 204) {
-            // No confirmation yet, proceed normally
-          } else {
-            setError('Failed to fetch loan confirmation status.');
+          if (!(err.response && err.response.status === 204)) {
+            setError("Failed to fetch loan confirmation status.");
           }
         })
         .finally(() => setLoading(false));
@@ -45,11 +55,22 @@ const ConfirmLoanSelectionPage = () => {
         confirmedAmount: parseFloat(amount),
         confirmedTenureMonths: parseInt(tenure),
       };
-      const data = await confirmLoanSelection(parseInt(leadId), payload);
+      const data = await confirmLoanSelection(parseInt(leadId), payload, otp);
       setResult(data);
       setIsConfirmed(true);
+      setMessage("Loan selection confirmed successfully.");
     } catch (err) {
-      setError(err.response?.data?.message || 'Loan selection confirmation failed.');
+      setError(err.response?.data || 'Loan selection confirmation failed.');
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setError('');
+    try {
+      await resendLoanConfirmationOtp(parseInt(leadId));
+      setMessage('OTP resent to your email.');
+    } catch (err) {
+      setError('Failed to resend OTP.');
     }
   };
 
@@ -67,8 +88,7 @@ const ConfirmLoanSelectionPage = () => {
             value={leadId}
             onChange={(e) => setLeadId(e.target.value)}
             className="w-full border p-2 rounded"
-            placeholder="Enter Lead ID"
-            disabled={!!passedLeadId || isConfirmed} // disable if passed or already confirmed
+            disabled={!!passedLeadId || isConfirmed}
           />
         </div>
 
@@ -79,7 +99,6 @@ const ConfirmLoanSelectionPage = () => {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="w-full border p-2 rounded"
-            placeholder="Enter Amount"
             disabled={isConfirmed}
           />
         </div>
@@ -91,10 +110,31 @@ const ConfirmLoanSelectionPage = () => {
             value={tenure}
             onChange={(e) => setTenure(e.target.value)}
             className="w-full border p-2 rounded"
-            placeholder="Enter Tenure"
             disabled={isConfirmed}
           />
         </div>
+
+        {!isConfirmed && (
+          <>
+            <div className="mb-4">
+              <label className="block font-medium mb-1">Enter OTP</label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="w-full border p-2 rounded"
+                placeholder="Enter OTP sent to your email"
+              />
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                className="text-sm text-blue-600 hover:underline mt-1"
+              >
+                Resend OTP
+              </button>
+            </div>
+          </>
+        )}
 
         <button
           onClick={handleConfirm}
@@ -108,6 +148,7 @@ const ConfirmLoanSelectionPage = () => {
           {isConfirmed ? 'Already Confirmed' : 'Confirm Selection'}
         </button>
 
+        {message && <p className="text-green-600 mt-4">{message}</p>}
         {error && <p className="text-red-600 mt-4">{error}</p>}
 
         {result && (
