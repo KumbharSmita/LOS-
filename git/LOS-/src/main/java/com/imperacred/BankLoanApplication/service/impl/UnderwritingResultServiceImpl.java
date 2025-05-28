@@ -44,11 +44,19 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
     private AuthContext authContext;
 
     @Override
-    public UnderwritingResultsDTO performUnderwriting(Integer leadsId, BigDecimal approvedAmount, HttpServletRequest request) {
+    public UnderwritingResultsDTO performUnderwriting(Integer leadsId, BigDecimal approvedAmount,
+            BigDecimal rateOfInterest, Integer tenureMonths, HttpServletRequest request) {
+
         logger.info("Underwriting process started for Lead ID: {}", leadsId);
 
         if (approvedAmount == null || approvedAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Approved amount must be greater than 0");
+        }
+        if (rateOfInterest == null || rateOfInterest.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Rate of interest must be greater than 0");
+        }
+        if (tenureMonths == null || tenureMonths <= 0) {
+            throw new IllegalArgumentException("Tenure months must be greater than 0");
         }
 
         // --- Authorization check ---
@@ -60,10 +68,8 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
 
         Integer currentAgentId = currentAgent.getAgent_id();
 
-        if (userRole == Role.SUPER_ADMIN) {
-            logger.info("User is SUPER_ADMIN, proceeding without assignment check.");
-        } else if (userRole == Role.ADMIN) {
-            
+        // Only ADMIN role allowed and must be assigned to the lead
+        if (userRole == Role.ADMIN) {
             boolean isAssigned = leadAssignmentRepository.existsByLeadsIdAndAgentId(leadsId, currentAgentId);
             if (!isAssigned) {
                 logger.warn("Lead ID {} is not assigned to Admin agent ID {}", leadsId, currentAgentId);
@@ -95,6 +101,7 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
         String riskRating;
         String underwriterNotes;
 
+        // Updated logic: Reject if credit score less than 700
         if (creditScore >= 800 && creditScore <= 900) {
             decision = "APPROVED";
             riskRating = "HIGH";
@@ -103,10 +110,6 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
             decision = "APPROVED";
             riskRating = "MEDIUM";
             underwriterNotes = "Loan approved with medium creditworthiness.";
-        } else if (creditScore >= 500 && creditScore < 700) {
-            decision = "CONDITIONAL";
-            riskRating = "LOW";
-            underwriterNotes = "Loan conditionally approved with low creditworthiness.";
         } else {
             decision = "REJECTED";
             riskRating = "LOW";
@@ -118,11 +121,14 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
 
         UnderwritingResults result = new UnderwritingResults();
         result.setLeadsId(leadsId);
+        result.setAgentId(currentAgentId);
         result.setRiskRating(riskRating);
         result.setApprovedAmount(approvedAmount);
         result.setDecision(decision);
         result.setUnderwriterNotes(underwriterNotes);
         result.setEvaluatedAt(LocalDateTime.now());
+        result.setRateOfInterest(rateOfInterest);
+        result.setTenureMonths(tenureMonths);
 
         underwritingResultRepository.save(result);
         logger.debug("Underwriting result saved for Lead ID: {}", leadsId);
@@ -132,12 +138,16 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
         logger.info("Lead status updated to '{}' for Lead ID: {}", decision, leadsId);
 
         return new UnderwritingResultsDTO(
+        		result.getResultId(),
                 leadsId,
                 riskRating,
                 approvedAmount,
                 decision,
                 underwriterNotes,
-                result.getEvaluatedAt()
+                result.getEvaluatedAt(),
+                currentAgentId,
+                rateOfInterest,
+                tenureMonths
         );
     }
 
@@ -149,17 +159,36 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
                 .orElseThrow(() -> new RuntimeException("No underwriting result found for lead ID: " + leadsId));
 
         return new UnderwritingResultsDTO(
+        	    result.getResultId(),
                 result.getLeadsId(),
                 result.getRiskRating(),
                 result.getApprovedAmount(),
                 result.getDecision(),
                 result.getUnderwriterNotes(),
-                result.getEvaluatedAt()
+                result.getEvaluatedAt(),
+                result.getAgentId(),
+                result.getRateOfInterest(),
+                result.getTenureMonths()
         );
     }
 
     @Override
-    public List<UnderwritingResults> getAllUnderwritingResults() {
-        return underwritingResultRepository.findAll();
+    public List<UnderwritingResultsDTO> getAllUnderwritingResults() {
+        List<UnderwritingResults> results = underwritingResultRepository.findAll();
+
+        return results.stream()
+            .map(result -> new UnderwritingResultsDTO(
+                result.getResultId(),
+                result.getLeadsId(),
+                result.getRiskRating(),
+                result.getApprovedAmount(),
+                result.getDecision(),
+                result.getUnderwriterNotes(),
+                result.getEvaluatedAt(),
+                result.getAgentId(),
+                result.getRateOfInterest(),
+                result.getTenureMonths()
+            ))
+            .toList();
     }
 }

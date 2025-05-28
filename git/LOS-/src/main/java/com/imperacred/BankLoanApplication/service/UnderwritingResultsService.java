@@ -10,9 +10,14 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public interface UnderwritingResultsService {
 
-	UnderwritingResultsDTO performUnderwriting(Integer leadsId, BigDecimal approvedAmount, HttpServletRequest request);
+	UnderwritingResultsDTO performUnderwriting(
+	        Integer leadsId, 
+	        BigDecimal approvedAmount, 
+	        BigDecimal rateOfInterest,     
+	        Integer tenureMonths,           
+	        HttpServletRequest request
+	    );
 
 	    UnderwritingResultsDTO getUnderwritingByLeadId(Integer leadsId);
-	    List<UnderwritingResults> getAllUnderwritingResults();
-
+	    List<UnderwritingResultsDTO> getAllUnderwritingResults();
 }

@@ -13,7 +13,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,12 +27,21 @@ public class UnderwritingResults {
 	private Integer resultId;
 
 	@Column(name = "leads_id", nullable = false)
-	private Integer leadsId; 
+	private Integer leadsId;
 
 	private String riskRating;
 	private BigDecimal approvedAmount;
 	private String decision; // APPROVED, REJECTED, CONDITIONAL
 	private String underwriterNotes;
 	private LocalDateTime evaluatedAt;
+
+	@Column(name = "agent_id")
+	private Integer agentId;
+
+	@Column(name = "rate_of_interest")
+	private BigDecimal rateOfInterest;
+
+	@Column(name = "tenure_months")
+	private Integer tenureMonths;
 
 }

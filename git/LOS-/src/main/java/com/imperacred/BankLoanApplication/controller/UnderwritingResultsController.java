@@ -18,10 +18,10 @@ import com.imperacred.BankLoanApplication.service.UnderwritingResultsService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+
 @CrossOrigin(origins = "http://localhost:3000") 
 @RestController
 @RequestMapping("/api/underwriting")
-
 public class UnderwritingResultsController {
 
     private static final Logger logger = LogManager.getLogger(UnderwritingResultsController.class);
@@ -43,6 +43,8 @@ public class UnderwritingResultsController {
         UnderwritingResultsDTO result = underwritingService.performUnderwriting(
                 requestDTO.getLeadsId(),
                 requestDTO.getApprovedAmount(),
+                requestDTO.getRateOfInterest(),
+                requestDTO.getTenureMonths(),
                 request 
         );
 
@@ -57,9 +59,9 @@ public class UnderwritingResultsController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<UnderwritingResults>> getAllUnderwritingResults() {
+    public ResponseEntity<List<UnderwritingResultsDTO>> getAllUnderwritingResults() {
         logger.info("Fetching all underwriting results");
-        List<UnderwritingResults> results = underwritingService.getAllUnderwritingResults();
+        List<UnderwritingResultsDTO> results = underwritingService.getAllUnderwritingResults();
         return ResponseEntity.ok(results);
     }
 
@@ -71,7 +73,7 @@ public class UnderwritingResultsController {
             List<UnderwritingResults> results = underwritingResultsRepository.findByLeadsId(lead.getLeadsId());
 
             if (results.isEmpty()) {
-                // Underwriting not done yet
+                
                 return ResponseEntity.ok().body(
                     Map.of(
                         "underwritingDone", false,
@@ -91,7 +93,10 @@ public class UnderwritingResultsController {
                     "riskRating", result.getRiskRating(),
                     "approvedAmount", result.getApprovedAmount(),
                     "underwriterNotes", result.getUnderwriterNotes(),
-                    "evaluatedAt", result.getEvaluatedAt()
+                    "evaluatedAt", result.getEvaluatedAt(),
+                    "agentId", result.getAgentId(),
+                    "tenureMonths", result.getTenureMonths(),
+                    "rateOfInterest", result.getRateOfInterest()
                 )
             );
         }).orElseGet(() -> {

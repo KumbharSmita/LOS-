@@ -2,7 +2,9 @@ package com.imperacred.BankLoanApplication.service.impl;
 
 import com.imperacred.BankLoanApplication.dto.BorrowerSelectionDTO;
 import com.imperacred.BankLoanApplication.model.Lead;
+import com.imperacred.BankLoanApplication.model.UnderwritingResults;
 import com.imperacred.BankLoanApplication.repository.LeadsRepository;
+import com.imperacred.BankLoanApplication.repository.UnderwritingResultsRepository;
 import com.imperacred.BankLoanApplication.service.BorrowerSelectionService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,9 +17,13 @@ import java.math.BigDecimal;
 public class BorrowerSelectionServiceImpl implements BorrowerSelectionService {
 
     private static final Logger logger = LogManager.getLogger(BorrowerSelectionServiceImpl.class);
+  
+
 
     @Autowired
     private LeadsRepository leadRepository;
+    @Autowired
+    private UnderwritingResultsRepository underwritingResultsRepository;
 
     @Override
     public BorrowerSelectionDTO confirmLoanSelection(Integer leadsId, BorrowerSelectionDTO selectionDTO) {
@@ -29,13 +35,17 @@ public class BorrowerSelectionServiceImpl implements BorrowerSelectionService {
                     return new RuntimeException("Lead not found with ID: " + leadsId);
                 });
 
-        // Check if confirmation already exists
         if ("Confirmed by Borrower".equalsIgnoreCase(lead.getStatus())) {
             logger.warn("Duplicate confirmation attempt for Lead ID: {}", leadsId);
             throw new IllegalStateException("Loan selection has already been confirmed by the borrower.");
         }
 
-        BigDecimal maxApprovedAmount = new BigDecimal(lead.getAmount());
+        // Fetch latest underwriting result for this lead
+        UnderwritingResults latestResult = underwritingResultsRepository.findByLeadsId(leadsId).stream()
+            .max((r1, r2) -> r1.getEvaluatedAt().compareTo(r2.getEvaluatedAt()))
+            .orElseThrow(() -> new IllegalStateException("No underwriting result found for Lead ID: " + leadsId));
+
+        BigDecimal maxApprovedAmount = latestResult.getApprovedAmount();
         Integer maxApprovedTenure = lead.getTenureMonths();
 
         BigDecimal selectedAmount = selectionDTO.getConfirmedAmount();
@@ -62,8 +72,7 @@ public class BorrowerSelectionServiceImpl implements BorrowerSelectionService {
 
         leadRepository.save(lead);
 
-        logger.info("Lead ID {} updated with confirmed amount {} and tenure {}",
-                leadsId, selectedAmount, selectedTenure);
+        logger.info("Lead ID {} updated with confirmed amount {} and tenure {}", leadsId, selectedAmount, selectedTenure);
 
         BorrowerSelectionDTO borrowerSelectionDTO = new BorrowerSelectionDTO();
         borrowerSelectionDTO.setConfirmedAmount(lead.getConfirmedAmount());
@@ -71,6 +80,7 @@ public class BorrowerSelectionServiceImpl implements BorrowerSelectionService {
 
         return borrowerSelectionDTO;
     }
+
     @Override
     public BorrowerSelectionDTO getLoanConfirmationByLeadId(Integer leadsId) {
         Lead lead = leadRepository.findById(leadsId)
