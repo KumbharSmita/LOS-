@@ -49,6 +49,10 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
 
         logger.info("Underwriting process started for Lead ID: {}", leadsId);
 
+      
+        logger.debug("Agent provided - Lead ID: {}, Approved Amount: {}, Interest Rate: {}, Tenure: {} months",
+                leadsId, approvedAmount, rateOfInterest, tenureMonths);
+
         if (approvedAmount == null || approvedAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Approved amount must be greater than 0");
         }
@@ -68,7 +72,8 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
 
         Integer currentAgentId = currentAgent.getAgent_id();
 
-        // Only ADMIN role allowed and must be assigned to the lead
+        logger.info("Performing underwriting by Agent ID: {} (Email: {}) with Role: {}", currentAgentId, userEmail, userRole);
+
         if (userRole == Role.ADMIN) {
             boolean isAssigned = leadAssignmentRepository.existsByLeadsIdAndAgentId(leadsId, currentAgentId);
             if (!isAssigned) {
@@ -79,9 +84,7 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
             logger.warn("User role {} not authorized to perform underwriting", userRole);
             throw new RuntimeException("Access denied: Unauthorized role.");
         }
-        // --- Authorization check end ---
 
-        // Check if underwriting already done
         List<UnderwritingResults> existingResults = underwritingResultRepository.findByLeadsId(leadsId);
         if (!existingResults.isEmpty()) {
             logger.warn("Underwriting already performed for Lead ID: {}", leadsId);
@@ -101,7 +104,6 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
         String riskRating;
         String underwriterNotes;
 
-        // Updated logic: Reject if credit score less than 700
         if (creditScore >= 800 && creditScore <= 900) {
             decision = "APPROVED";
             riskRating = "HIGH";
@@ -115,9 +117,12 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
             riskRating = "LOW";
             underwriterNotes = "Credit score too low.";
             approvedAmount = BigDecimal.ZERO;
+            logger.info("Loan rejected due to low credit score. Approved Amount forcibly set to 0.");
         }
 
         logger.info("Underwriting decision for Lead ID {}: {}, Risk: {}", leadsId, decision, riskRating);
+        logger.debug("Final values to be saved - Amount: {}, Tenure: {} months, Interest Rate: {}%",
+                approvedAmount, tenureMonths, rateOfInterest);
 
         UnderwritingResults result = new UnderwritingResults();
         result.setLeadsId(leadsId);
@@ -138,7 +143,7 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
         logger.info("Lead status updated to '{}' for Lead ID: {}", decision, leadsId);
 
         return new UnderwritingResultsDTO(
-        		result.getResultId(),
+                result.getResultId(),
                 leadsId,
                 riskRating,
                 approvedAmount,
@@ -150,7 +155,6 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
                 tenureMonths
         );
     }
-
     @Override
     public UnderwritingResultsDTO getUnderwritingByLeadId(Integer leadsId) {
         UnderwritingResults result = underwritingResultRepository.findByLeadsId(leadsId)

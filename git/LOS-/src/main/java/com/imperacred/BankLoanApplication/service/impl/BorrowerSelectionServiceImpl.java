@@ -46,7 +46,8 @@ public class BorrowerSelectionServiceImpl implements BorrowerSelectionService {
             .orElseThrow(() -> new IllegalStateException("No underwriting result found for Lead ID: " + leadsId));
 
         BigDecimal maxApprovedAmount = latestResult.getApprovedAmount();
-        Integer maxApprovedTenure = lead.getTenureMonths();
+        Integer maxApprovedTenure = latestResult.getTenureMonths();
+
 
         BigDecimal selectedAmount = selectionDTO.getConfirmedAmount();
         Integer selectedTenure = selectionDTO.getConfirmedTenureMonths();

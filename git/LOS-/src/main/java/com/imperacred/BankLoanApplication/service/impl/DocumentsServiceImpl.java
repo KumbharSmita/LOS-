@@ -1,73 +1,96 @@
 package com.imperacred.BankLoanApplication.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.imperacred.BankLoanApplication.dto.DocumentsDTO;
 import com.imperacred.BankLoanApplication.model.Documents;
 import com.imperacred.BankLoanApplication.repository.DocumentsRepository;
 import com.imperacred.BankLoanApplication.service.DocumentsService;
+import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-/**
- * Service implementation for handling document operations.
- */
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
+@RequiredArgsConstructor
 public class DocumentsServiceImpl implements DocumentsService {
 
-    @Autowired
-    private DocumentsRepository documentsRepository;
+    private static final Logger logger = LogManager.getLogger(DocumentsServiceImpl.class);
 
-    // Converts DTO to Entity
-    private Documents toEntity(DocumentsDTO dto) {
-        return Documents.builder()
-                .document_id(dto.getDocument_id())
-                .leadsId(dto.getLeads_id())
-                .document_type(dto.getDocument_type())
-                .file_path(dto.getFile_path())
-                .uploaded_at(dto.getUploaded_at())
-                .build();
-    }
+    private final DocumentsRepository repository;
 
-    // Converts Entity to DTO
-    private DocumentsDTO toDTO(Documents document) {
-        return DocumentsDTO.builder()
-                .document_id(document.getDocument_id())
-                .leads_id(document.getLeadsId())
-                .document_type(document.getDocument_type())
-                .file_path(document.getFile_path())
-                .uploaded_at(document.getUploaded_at())
-                .build();
-    }
-
-    // Create and save document
     @Override
-    public DocumentsDTO createDocument(DocumentsDTO dto) {
-        Documents saved = documentsRepository.save(toEntity(dto));
-        return toDTO(saved);
+    public DocumentsDTO uploadDocument(Integer leadId, String documentType, MultipartFile file) {
+        logger.info("Starting uploadDocument for leadId: {}, documentType: {}", leadId, documentType);
+
+        try {
+            // Get user home directory dynamically
+            String userHome = System.getProperty("user.home");
+            String desktopUploadsDir = userHome + File.separator + "Desktop" + File.separator + "uploads";
+
+            logger.info("Resolved desktop uploads directory: {}", desktopUploadsDir);
+
+            // Ensure directory exists
+            Files.createDirectories(Paths.get(desktopUploadsDir));
+            logger.info("Upload directory verified/created at: {}", desktopUploadsDir);
+
+            // Create file name
+            String fileName = leadId + "_" + documentType + "_" + file.getOriginalFilename();
+            String filePath = desktopUploadsDir + File.separator + fileName;
+
+            logger.debug("Resolved fileName: {}", fileName);
+            logger.debug("Full file path: {}", filePath);
+
+            // Transfer the file to the destination path
+            file.transferTo(new File(filePath));
+            logger.info("File transferred to disk at {}", filePath);
+
+            // Create document entity and save
+            Documents doc = new Documents();
+            doc.setLeadsId(leadId);
+            doc.setDocumentType(documentType);
+            doc.setFilePath(filePath);
+            doc.setUploadedAt(LocalDateTime.now());
+
+            logger.debug("Saving document entity to repository: {}", doc);
+            Documents saved = repository.save(doc);
+            logger.info("Document saved with ID: {}", saved.getDocumentId());
+
+            return mapToDTO(saved);
+        } catch (IOException e) {
+            logger.error("Failed to store file for leadId: {}, documentType: {}", leadId, documentType, e);
+            throw new RuntimeException("Failed to store file", e);
+        }
     }
 
-    // Retrieve document by ID
     @Override
-    public DocumentsDTO getDocumentById(Integer id) {
-        return documentsRepository.findById(id)
-                .map(this::toDTO)
-                .orElse(null);
-    }
+    public List<DocumentsDTO> getDocumentsByLeadId(Integer leadId) {
+        logger.info("Fetching documents for leadId: {}", leadId);
 
-    // Retrieve all documents
-    @Override
-    public List<DocumentsDTO> getAllDocuments() {
-        return documentsRepository.findAll().stream()
-                .map(this::toDTO)
+        List<DocumentsDTO> documents = repository.findByLeadsId(leadId)
+                .stream()
+                .map(this::mapToDTO)
                 .collect(Collectors.toList());
+
+        logger.info("Found {} documents for leadId: {}", documents.size(), leadId);
+        return documents;
     }
 
-    // Delete document by ID
-    @Override
-    public void deleteDocument(Integer id) {
-        documentsRepository.deleteById(id);
+    private DocumentsDTO mapToDTO(Documents doc) {
+        logger.debug("Mapping Documents entity to DTO: {}", doc);
+        DocumentsDTO dto = new DocumentsDTO();
+        dto.setDocumentId(doc.getDocumentId());
+        dto.setLeadsId(doc.getLeadsId());
+        dto.setDocumentType(doc.getDocumentType());
+        dto.setFilePath(doc.getFilePath());
+        dto.setUploadedAt(doc.getUploadedAt());
+        return dto;
     }
 }

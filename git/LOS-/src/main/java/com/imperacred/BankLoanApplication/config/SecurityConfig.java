@@ -44,6 +44,8 @@ public class SecurityConfig {
                 "/api/loans/**",
                 "/api/disbursements/**",
                 "/api/borrower-selection/**",
+                "/api/bank/**",
+                "/api/documents/**",
                 "/api/underwriting/lead-status"
             ).permitAll()
                 .requestMatchers("/api/lead-status-history/**").hasAnyRole("ADMIN", "SUPER_ADMIN")

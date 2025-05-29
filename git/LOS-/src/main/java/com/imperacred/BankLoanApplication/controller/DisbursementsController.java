@@ -26,16 +26,15 @@ public class DisbursementsController {
     @Autowired
     private DisbursementsRepository disbursementsRepository;
 
-   
     @PostMapping("/disburse-loan")
-    public DisbursementsDTO disburseLoan(@RequestBody DisbursementsDTO disbursementsDTO) {
+    public ResponseEntity<DisbursementsDTO> disburseLoan(@RequestBody DisbursementsDTO disbursementsDTO) {
         logger.info("Received request to disburse loan for leadsId: {}", disbursementsDTO.getLeadsId());
 
         try {
             DisbursementsDTO result = disbursementsService.disburseLoan(disbursementsDTO);
             logger.info("Loan successfully disbursed for leadsId: {} with UTR: {}",
                     disbursementsDTO.getLeadsId(), result.getUtrNumber());
-            return result;
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             logger.error("Error while disbursing loan for leadsId: {}: {}", disbursementsDTO.getLeadsId(), e.getMessage(), e);
             throw e;
@@ -50,16 +49,16 @@ public class DisbursementsController {
             Disbursements disbursement = disbursementsRepository.findByLeadsId(leadsId)
                     .orElseThrow(() -> new RuntimeException("Disbursement not found for leads ID: " + leadsId));
 
-            DisbursementsDTO dto = new DisbursementsDTO();
-            dto.setLeadsId(disbursement.getLeadsId());
-            dto.setApprovedAmount(disbursement.getApprovedAmount());
-            dto.setRateOfInterest(disbursement.getRateOfInterest());
-            dto.setProcessingFee(disbursement.getProcessingFee());
-            dto.setDisbursedAmount(disbursement.getDisbursedAmount());
-            dto.setBankAccount(disbursement.getBankAccount());
-            dto.setUtrNumber(disbursement.getUtrNumber());
-            dto.setDisbursedAt(disbursement.getDisbursedAt());
-            dto.setStatus(disbursement.getStatus());
+            DisbursementsDTO dto = new DisbursementsDTO(
+                    disbursement.getLeadsId(),
+                    disbursement.getApprovedAmount(),
+                    disbursement.getProcessingFee(),
+                    disbursement.getDisbursedAmount(),
+                    disbursement.getUtrNumber(),
+                    disbursement.getDisbursedAt(),
+                    disbursement.getStatus(),
+                    null // disbursementOtp is @JsonIgnore, and not returned
+            );
 
             logger.info("Successfully fetched disbursement details for leadsId: {}", leadsId);
             return ResponseEntity.ok(dto);
@@ -76,8 +75,6 @@ public class DisbursementsController {
         return ResponseEntity.ok("OTP sent successfully to registered email.");
     }
 
-
-
     @PostMapping("/verify-otp")
     public ResponseEntity<String> verifyOtp(@RequestBody DisbursementOtpDTO request) {
         logger.info("Verifying OTP for leadsId: {}", request.getLeadsId());
@@ -87,8 +84,6 @@ public class DisbursementsController {
             : ResponseEntity.badRequest().body("Invalid or expired OTP.");
     }
 
-
- 
     @PostMapping("/resend-otp")
     public ResponseEntity<String> resendOtp(@RequestBody DisbursementOtpDTO request) {
         logger.info("Request to resend OTP for leadsId: {}", request.getLeadsId());

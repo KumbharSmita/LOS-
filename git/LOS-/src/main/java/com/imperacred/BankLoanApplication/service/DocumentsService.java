@@ -1,12 +1,10 @@
 package com.imperacred.BankLoanApplication.service;
 
+import org.springframework.web.multipart.MultipartFile;
+import com.imperacred.BankLoanApplication.dto.DocumentsDTO;
 import java.util.List;
 
-import com.imperacred.BankLoanApplication.dto.DocumentsDTO;
-
 public interface DocumentsService {
-    DocumentsDTO createDocument(DocumentsDTO dto);
-    DocumentsDTO getDocumentById(Integer id);
-    List<DocumentsDTO> getAllDocuments();
-    void deleteDocument(Integer id);
+    DocumentsDTO uploadDocument(Integer leadId, String documentType, MultipartFile file);
+    List<DocumentsDTO> getDocumentsByLeadId(Integer leadId);
 }

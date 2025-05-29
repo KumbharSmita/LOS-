@@ -1,31 +1,29 @@
 package com.imperacred.BankLoanApplication.model;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "documents")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "documents")
 public class Documents {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "document_id")
-    private Integer document_id;
+    private Integer documentId;
 
-    @Column(name = "leads_id", nullable = false)
+    @Column(nullable = false)
     private Integer leadsId;
 
-    @Column(name = "document_type", nullable = false)
-    private String document_type;
+    @Column(nullable = false)
+    private String documentType;
 
-    @Column(name = "file_path", nullable = false)
-    private String file_path;
+    @Column(nullable = false)
+    private String filePath;
 
-    @Column(name = "uploaded_at", nullable = false)
-    private LocalDateTime uploaded_at;
+    @Column(nullable = false)
+    private LocalDateTime uploadedAt;
 }

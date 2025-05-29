@@ -84,6 +84,17 @@ public class Lead {
     
     @Column(name = "disbursement_otp_status")
     private String disbursementOtpStatus;
+    
+    
+    @Column(name = "bank_account_holder_name")
+    private String bankAccountHolderName;
+
+    @Column(name = "bank_account_number")
+    private String bankAccountNumber;
+
+    @Column(name = "bank_ifsc_code")
+    private String bankIfscCode;
+
 
     // PrePersist annotation to set createdAt before saving a new entity
     @PrePersist

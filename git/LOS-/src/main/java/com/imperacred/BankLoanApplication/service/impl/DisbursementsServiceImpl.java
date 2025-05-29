@@ -3,6 +3,7 @@ package com.imperacred.BankLoanApplication.service.impl;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,8 +14,10 @@ import org.springframework.stereotype.Service;
 import com.imperacred.BankLoanApplication.dto.DisbursementsDTO;
 import com.imperacred.BankLoanApplication.model.Disbursements;
 import com.imperacred.BankLoanApplication.model.Lead;
+import com.imperacred.BankLoanApplication.model.UnderwritingResults;
 import com.imperacred.BankLoanApplication.repository.DisbursementsRepository;
 import com.imperacred.BankLoanApplication.repository.LeadsRepository;
+import com.imperacred.BankLoanApplication.repository.UnderwritingResultsRepository;
 import com.imperacred.BankLoanApplication.service.DisbursementsService;
 import com.imperacred.BankLoanApplication.service.EmailService;
 import com.imperacred.BankLoanApplication.service.OtpService;
@@ -37,6 +40,9 @@ public class DisbursementsServiceImpl implements DisbursementsService {
     private DisbursementsRepository disbursementsRepository;
 
     @Autowired
+    private UnderwritingResultsRepository underwritingResultsRepository;
+
+    @Autowired
     private OtpService otpService;
 
     @Autowired
@@ -51,9 +57,8 @@ public class DisbursementsServiceImpl implements DisbursementsService {
             .orElseThrow(() -> new RuntimeException("Lead not found for ID: " + leadId));
 
         String email = lead.getEmail();
-        String name = lead.getFirstName();  
+        String name = lead.getFirstName();
 
-      
         emailService.sendDisbursementOtpEmail(email, name, otp, false);
         logger.info("Disbursement OTP sent to email: {}", email);
     }
@@ -96,27 +101,25 @@ public class DisbursementsServiceImpl implements DisbursementsService {
         Lead lead = leadsRepository.findById(disbursementsDTO.getLeadsId())
             .orElseThrow(() -> new RuntimeException("Lead not found"));
 
-        //  Check if disbursement OTP is verified
         if (!"VERIFIED".equalsIgnoreCase(lead.getDisbursementOtpStatus())) {
             logger.error("Disbursement OTP not verified for lead ID: {}", disbursementsDTO.getLeadsId());
             throw new RuntimeException("Disbursement OTP not verified.");
         }
 
-        //  Check for duplicate disbursement or bank account
-        if (disbursementsRepository.existsByLeadsId(disbursementsDTO.getLeadsId())) {
+        if (disbursementsRepository.existsByLeadsId(lead.getLeadsId())) {
             throw new RuntimeException("Disbursement already exists for this lead ID.");
         }
-  
-        if (!ValidationUtil.isValidBankAccount(disbursementsDTO.getBankAccount())) {
-            logger.error("Invalid bank account number: {}", disbursementsDTO.getBankAccount());
+
+        String bankAccount = lead.getBankAccountNumber();
+        if (!ValidationUtil.isValidBankAccount(bankAccount)) {
+            logger.error("Invalid bank account number: {}", bankAccount);
             throw new IllegalArgumentException("Invalid bank account number. It must be 9 to 18 digits.");
         }
-        
-        if (disbursementsRepository.existsByBankAccount(disbursementsDTO.getBankAccount())) {
+
+        if (disbursementsRepository.existsByBankAccount(bankAccount)) {
             throw new RuntimeException("Bank account already used.");
         }
 
-        // Confirm borrower & amount
         if (!"Confirmed by Borrower".equalsIgnoreCase(lead.getStatus())) {
             throw new RuntimeException("Borrower has not confirmed loan selection.");
         }
@@ -125,26 +128,35 @@ public class DisbursementsServiceImpl implements DisbursementsService {
             throw new RuntimeException("Confirmed amount or tenure missing.");
         }
 
+        // Fetch latest underwriting result
+        List<UnderwritingResults> results = underwritingResultsRepository.findByLeadsId(lead.getLeadsId());
+        if (results.isEmpty()) {
+            throw new RuntimeException("Underwriting result not found for lead ID: " + lead.getLeadsId());
+        }
+
+        UnderwritingResults result = results.get(results.size() - 1); // Latest
+        BigDecimal rateOfInterest = result.getRateOfInterest();
+
         BigDecimal confirmedAmount = lead.getConfirmedAmount();
         BigDecimal processingFee = confirmedAmount.multiply(PROCESSING_FEE_PERCENTAGE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal disbursedAmount = confirmedAmount.subtract(processingFee);
 
-    
         Disbursements disbursements = new Disbursements();
         disbursements.setLeadsId(lead.getLeadsId());
         disbursements.setApprovedAmount(confirmedAmount);
-        disbursements.setRateOfInterest(disbursementsDTO.getRateOfInterest());
+        disbursements.setRateOfInterest(rateOfInterest);
         disbursements.setProcessingFee(processingFee);
         disbursements.setDisbursedAmount(disbursedAmount);
-        disbursements.setBankAccount(disbursementsDTO.getBankAccount());
+        disbursements.setBankAccount(bankAccount);
         disbursements.setUtrNumber(generateUtrNumber());
         disbursements.setDisbursedAt(LocalDateTime.now());
         disbursements.setStatus("SUCCESS");
 
         disbursementsRepository.save(disbursements);
 
-      
+        // Build response DTO
         disbursementsDTO.setApprovedAmount(confirmedAmount);
+        //disbursementsDTO.setRateOfInterest(rateOfInterest);
         disbursementsDTO.setProcessingFee(processingFee);
         disbursementsDTO.setDisbursedAmount(disbursedAmount);
         disbursementsDTO.setUtrNumber(disbursements.getUtrNumber());
