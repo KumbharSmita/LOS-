@@ -44,7 +44,7 @@ const DisbursementStatus = () => {
       <div className="space-y-3 text-gray-800">
         <p><strong>Leads Id:</strong> {disbursement.leadsId}</p>
         <p><strong>Approved Amount:</strong> ₹{disbursement.approvedAmount}</p>
-        <p><strong>Rate of Interest:</strong> {disbursement.rateOfInterest}%</p>
+       
         <p><strong>Processing Fee:</strong> ₹{disbursement.processingFee}</p>
         <p><strong>Disbursed Amount:</strong> ₹{disbursement.disbursedAmount}</p>
         <p><strong>UTR Number:</strong> {disbursement.utrNumber}</p>

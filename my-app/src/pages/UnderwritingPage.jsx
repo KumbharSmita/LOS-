@@ -16,24 +16,40 @@ const UnderwritingPage = () => {
   const [singleResult, setSingleResult] = useState(null);
   const [isSingleSearch, setIsSingleSearch] = useState(false);
 
-  const handleUnderwrite = async () => {
-    setError('');
-    try {
-      const data = await performUnderwriting(
-        parseInt(leadId),
-        parseFloat(approvedAmount),
-        parseFloat(rateOfInterest),
-        parseInt(tenureMonths)
-      );
-      setResult(data);
-      setLeadId('');
-      setApprovedAmount('');
-      setRateOfInterest('');
-      setTenureMonths('');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Underwriting failed');
+ const handleUnderwrite = async () => {
+  setError('');
+  try {
+    // Log the raw input before parsing
+    console.log('Submitting underwriting with tenureMonths (raw):', tenureMonths);
+
+    // Validate tenureMonths is a positive integer
+    const parsedTenure = parseInt(tenureMonths, 10);
+
+    // Log parsed value
+    console.log('Parsed Tenure:', parsedTenure);
+
+    if (isNaN(parsedTenure) || parsedTenure <= 0) {
+      setError('Tenure must be a valid positive number');
+      return;
     }
-  };
+
+    const data = await performUnderwriting(
+      parseInt(leadId, 10),
+      parseFloat(approvedAmount),
+      parseFloat(rateOfInterest),
+      parsedTenure
+    );
+
+    setResult(data);
+    setLeadId('');
+    setApprovedAmount('');
+    setRateOfInterest('');
+    setTenureMonths('');
+  } catch (err) {
+    setError(err.response?.data?.message || 'Underwriting failed');
+  }
+};
+
 
   const handleFetchAllResults = async () => {
     setError('');
@@ -100,6 +116,7 @@ const UnderwritingPage = () => {
           <label className="block mb-1 font-medium">Tenure (Months)</label>
           <input
             type="number"
+            min={1}
             value={tenureMonths}
             onChange={(e) => setTenureMonths(e.target.value)}
             className="w-full border p-2 rounded"

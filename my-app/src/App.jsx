@@ -21,8 +21,10 @@ import LoanProcessingPage from './pages/LoanProcessingPage';
 import RepaymentSchedulePage from './pages/RepaymentSchedulePage';
 import UserRegister from './pages/UserRegister';
 import UserLogin from './pages/UserLogin';
+import BankDetailsPage from './pages/BankDetailsPage';
 
-
+import DocumentUpload from './pages/DocumentUploadpage';
+import DocumentUploadPage from './pages/DocumentUploadpage';
 function App() {
   return (
     <Router>
@@ -47,8 +49,8 @@ function App() {
 <Route path="/repayment-schedule" element={<RepaymentSchedulePage />} />
         <Route path="/user-register" element={<UserRegister />} />
         <Route path="/user-login" element={<UserLogin />} />
-      
-
+      <Route path="/bank-details" element={<BankDetailsPage />} />
+        <Route path="/document-upload" element={<DocumentUploadPage />} />
       </Routes>
     </Router>
   );

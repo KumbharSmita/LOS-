@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { verifyOtp, resendOtp } from '../api/auth'; // make sure these APIs exist
+import { verifyOtp, resendOtp } from '../api/auth'; // ensure these exist
 
 export default function VerifyOtp() {
   const location = useLocation();
@@ -26,18 +26,17 @@ export default function VerifyOtp() {
       const response = await verifyOtp(leads_id, String(otp));
       const result = response?.data || response;
 
-      // Check if backend message indicates success
       if (result?.message?.toLowerCase().includes('success')) {
         setIsSuccess(true);
         setMessage(result.message);
 
-        // Navigate to success page with data from response
         navigate('/success', {
           state: {
             agentInfo: result.agentId,
             expectedContactTime: result.expectedContactTime,
-            message: result.message
-          }
+            message: result.message,
+            leadsId: leads_id,  // pass leads_id here
+          },
         });
       } else {
         setMessage(result?.message || 'OTP verification failed.');
@@ -95,11 +94,7 @@ export default function VerifyOtp() {
       </form>
 
       {message && (
-        <p
-          className={`mt-4 text-center text-sm ${
-            isSuccess ? 'text-green-600' : 'text-red-600'
-          }`}
-        >
+        <p className={`mt-4 text-center text-sm ${isSuccess ? 'text-green-600' : 'text-red-600'}`}>
           {message}
         </p>
       )}
