@@ -9,10 +9,12 @@ public interface LeadAssignmentService {
 	    LeadAssignmentResponseDTO assignLeadToAgent(Integer  leads_id);
 	    List<LeadAssignmentResponseDTO> getAssignedLeadsForAgent(Integer agentId);
 	    List<LeadAssignmentResponseDTO> getAssignedLeadsForAgentByStatus(Integer agentId, String status);
+		LeadAssignmentResponseDTO getAssignmentByLeadId(Integer leadId);
 
 	}
 
 	  
 	
+
 
 

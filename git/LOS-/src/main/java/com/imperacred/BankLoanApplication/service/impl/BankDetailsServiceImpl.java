@@ -34,7 +34,6 @@ public class BankDetailsServiceImpl implements BankDetailsService {
             throw new IllegalStateException("Loan not confirmed yet. Cannot add bank details.");
         }
 
-        logger.info("Updating bank details for Lead ID: {}", leadsId);
         lead.setBankAccountHolderName(dto.getAccountHolderName());
         lead.setBankAccountNumber(dto.getAccountNumber());
         lead.setBankIfscCode(dto.getIfscCode());
@@ -44,5 +43,27 @@ public class BankDetailsServiceImpl implements BankDetailsService {
 
         dto.setLeadsId(leadsId);
         return dto;
+    }
+
+    @Override
+    public BankDetailsDTO getBankDetailsByLeadId(Integer leadsId) {
+        logger.info("Fetching bank details for Lead ID: {}", leadsId);
+
+        return leadsRepository.findById(leadsId).map(lead -> {
+            if (lead.getBankAccountHolderName() != null &&
+                lead.getBankAccountNumber() != null &&
+                lead.getBankIfscCode() != null) {
+
+                BankDetailsDTO dto = new BankDetailsDTO();
+                dto.setLeadsId(leadsId);
+                dto.setAccountHolderName(lead.getBankAccountHolderName());
+                dto.setAccountNumber(lead.getBankAccountNumber());
+                dto.setIfscCode(lead.getBankIfscCode());
+                return dto;
+            } else {
+                logger.info("Bank details not found for Lead ID: {}", leadsId);
+                return null;
+            }
+        }).orElse(null);
     }
 }

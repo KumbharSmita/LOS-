@@ -27,20 +27,27 @@ public class LeadAssignmentController {
 
     @PostMapping("/assign")
     public ResponseEntity<LeadAssignmentResponseDTO> assignLead(@RequestBody @Valid LeadAssignmentRequestDTO request) {
-        logger.info("Received lead assignment request for lead ID: {}", request.getLeadsId());
+        Integer leadId = request.getLeadsId();
+        if (leadId == null) {
+            logger.error("Lead ID in request is null. Cannot proceed with assignment.");
+            return ResponseEntity.badRequest().body(null); 
+        }
+
+        logger.info("Received lead assignment request for lead ID: {}", leadId);
 
         try {
-            LeadAssignmentResponseDTO response = leadAssignmentService.assignLeadToAgent(request.getLeadsId());
+            LeadAssignmentResponseDTO response = leadAssignmentService.assignLeadToAgent(leadId);
             logger.info("Lead successfully assigned: Lead {} {} -> Agent ID {}",
                     response.getLead().getFirstName(),
                     response.getLead().getLastName(),
                     response.getAgent_id());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Failed to assign lead with ID {}: {}", request.getLeadsId(), e.getMessage(), e);
+            logger.error("Failed to assign lead with ID {}: {}", leadId, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
+
 
     @GetMapping("/assigned-leads/{agentId}")
     public ResponseEntity<List<LeadAssignmentResponseDTO>> getAssignedLeads(@PathVariable Integer agentId) {
@@ -65,5 +72,18 @@ public class LeadAssignmentController {
 
         return ResponseEntity.ok(filteredLeads);
     }
+    
+    @GetMapping("/lead/{leadId}")
+    public ResponseEntity<LeadAssignmentResponseDTO> getAssignmentByLeadId(@PathVariable Integer leadId) {
+        logger.info("Received request to fetch assignment info for lead ID: {}", leadId);
+
+        LeadAssignmentResponseDTO assignment = leadAssignmentService.getAssignmentByLeadId(leadId);
+
+        if (assignment == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(assignment);
+    }
+
 
 }

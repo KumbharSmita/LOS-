@@ -13,5 +13,7 @@ public interface LeadAssignmentRepository extends JpaRepository<LeadAssignments,
 	boolean existsByLeadsIdAndAgentId(Integer leadsId, Integer agentId);
 
     Optional<LeadAssignments> findByLeadsIdAndAgentId(Integer leadsId, Integer agentId);
+    boolean existsByLeadsIdAndStatus(Integer leadsId, String status);
 
+    Optional<LeadAssignments> findByLeadsIdAndStatus(Integer leadsId, String status);
 }

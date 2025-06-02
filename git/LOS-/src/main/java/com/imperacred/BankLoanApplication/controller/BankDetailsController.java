@@ -33,4 +33,19 @@ public class BankDetailsController {
         logger.info("Bank details saved successfully for Lead ID: {}", leadId);
         return ResponseEntity.ok(saved);
     }
+    
+    @GetMapping("/{leadId}/bank-details")
+    public ResponseEntity<BankDetailsDTO> getBankDetails(@PathVariable Integer leadId) {
+        logger.info("Fetching bank details for Lead ID: {}", leadId);
+        BankDetailsDTO dto = bankDetailsService.getBankDetailsByLeadId(leadId);
+
+        if (dto == null) {
+            logger.info("No bank details found for Lead ID: {}", leadId);
+            return ResponseEntity.noContent().build(); // 204 No Content
+        }
+
+        logger.info("Bank details found for Lead ID: {}", leadId);
+        return ResponseEntity.ok(dto);
+    }
+
 }

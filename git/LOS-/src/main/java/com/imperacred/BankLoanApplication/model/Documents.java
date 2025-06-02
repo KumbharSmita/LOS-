@@ -26,4 +26,6 @@ public class Documents {
 
     @Column(nullable = false)
     private LocalDateTime uploadedAt;
+    
+    private Boolean reuploadRequested = false;
 }

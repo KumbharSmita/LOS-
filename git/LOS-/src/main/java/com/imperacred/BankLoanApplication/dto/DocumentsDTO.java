@@ -10,4 +10,5 @@ public class DocumentsDTO {
     private String documentType;
     private String filePath;
     private LocalDateTime uploadedAt;
+    private Boolean reuploadRequested;
 }

@@ -43,6 +43,13 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
     public LeadAssignmentResponseDTO assignLeadToAgent(Integer leads_id) {
         logger.info("Starting lead assignment for lead ID: {}", leads_id);
 
+        // Prevent duplicate assignment
+        boolean alreadyAssigned = leadAssignmentRepo.existsByLeadsIdAndStatus(leads_id, "ASSIGNED");
+        if (alreadyAssigned) {
+            logger.info("Lead ID {} is already assigned. Skipping reassignment.", leads_id);
+            throw new IllegalStateException("Lead is already assigned to an agent.");
+        }
+
         Lead lead = leadsRepo.findById(leads_id)
                 .orElseThrow(() -> {
                     logger.error("Lead not found with ID: {}", leads_id);
@@ -66,29 +73,38 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
         assignment.setStatus("ASSIGNED");
         leadAssignmentRepo.save(assignment);
 
+        // **Log assignment details here**
+        logger.info("Lead ID {} ({} {}) assigned to Agent ID {} at {}", 
+            leads_id, 
+            lead.getFirstName(), 
+            lead.getLastName(), 
+            agentLoads.getAgent_id(), 
+            assignment.getAssigned_at());
+
         LeadsDTO leadDTO = new LeadsDTO(
-        		lead.getLeadsId(),
-                lead.getFirstName(),
-                lead.getLastName(),
-                lead.getEmail(),
-                lead.getPhone(),
-                lead.getPanNumber(),
-                lead.getAadhaarNumber(),
-                lead.getSource(),
-                lead.getLoanType(),
-                lead.getAmount(),
-                lead.getTenureMonths(),
-                lead.getPurpose()
+            lead.getLeadsId(),
+            lead.getFirstName(),
+            lead.getLastName(),
+            lead.getEmail(),
+            lead.getPhone(),
+            lead.getPanNumber(),
+            lead.getAadhaarNumber(),
+            lead.getSource(),
+            lead.getLoanType(),
+            lead.getAmount(),
+            lead.getTenureMonths(),
+            lead.getPurpose()
         );
 
         return new LeadAssignmentResponseDTO(
-                assignment.getLead_assignment_id(),
-                leadDTO,
-                agentLoads.getAgent_id(),
-                assignment.getAssigned_at(),
-                assignment.getStatus()
+            assignment.getLead_assignment_id(),
+            leadDTO,
+            agentLoads.getAgent_id(),
+            assignment.getAssigned_at(),
+            assignment.getStatus()
         );
     }
+
 
     @Override
     public List<LeadAssignmentResponseDTO> getAssignedLeadsForAgent(Integer agentId) {
@@ -170,6 +186,52 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
             .filter(dto -> dto != null)
             .toList();
     }
+    @Override
+    public LeadAssignmentResponseDTO getAssignmentByLeadId(Integer leadId) {
+        logger.info("Fetching assignment info for lead ID: {}", leadId);
+
+        Optional<LeadAssignments> assignmentOpt = leadAssignmentRepo.findByLeadsIdAndStatus(leadId, "ASSIGNED");
+
+        if (assignmentOpt.isEmpty()) {
+            logger.info("No assignment found for lead ID: {}", leadId);
+            return null;  // or throw a custom exception if preferred
+        }
+
+        LeadAssignments assignment = assignmentOpt.get();
+
+        Optional<Lead> leadOpt = leadsRepo.findById(leadId);
+        if (leadOpt.isEmpty()) {
+            logger.warn("Lead not found for ID: {}", leadId);
+            return null;
+        }
+
+        Lead lead = leadOpt.get();
+
+        LeadsDTO leadDTO = new LeadsDTO(
+            lead.getLeadsId(),
+            lead.getFirstName(),
+            lead.getLastName(),
+            lead.getEmail(),
+            lead.getPhone(),
+            lead.getPanNumber(),
+            lead.getAadhaarNumber(),
+            lead.getSource(),
+            lead.getLoanType(),
+            lead.getAmount(),
+            lead.getTenureMonths(),
+            lead.getPurpose()
+        );
+
+        return new LeadAssignmentResponseDTO(
+            assignment.getLead_assignment_id(),
+            leadDTO,
+            assignment.getAgentId(),
+            assignment.getAssigned_at(),
+            assignment.getStatus()
+        );
+    }
+
+
 
     
 }
