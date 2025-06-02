@@ -31,3 +31,24 @@ export const fetchAssignedLeadsByStatus = async (agentId, status) => {
     throw new Error(error.message);
   }
 };
+export const assignLeadToAgent = async (leadId) => {
+  try {
+    const response = await axiosInstance.post('/assign', {
+      leads_id: leadId,
+    });
+    return response.data; // returns LeadAssignmentResponseDTO
+  } catch (error) {
+    console.error('Error assigning lead:', error);
+    throw new Error('Failed to assign lead');
+  }
+};
+
+export const fetchAssignmentByLeadId = async (leadId) => {
+  try {
+    const response = await axiosInstance.get(`/lead/${leadId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching assignment info:', error);
+    throw new Error('Could not fetch assignment info');
+  }
+};

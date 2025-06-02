@@ -6,11 +6,13 @@ const API = axios.create({
 
 export const createLead = async (lead) => {
   const res = await API.post('/create', lead);
-  return res.data; // Assumes { leads_id } in response
+  return res.data;
 };
 
-export const verifyOtp = async (leads_id, otp_value) => {
-  const res = await API.post('/verify-otp', { leads_id, otp_value });
+// Now using camelCase keys for verifyOtp
+export const verifyOtp = async (leadsId, otpValue) => {
+  console.log('API verifyOtp called with:', { leadsId, otpValue });
+  const res = await API.post('/verify-otp', { leadsId, otpValue });
   return res.data;
 };
 

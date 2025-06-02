@@ -39,8 +39,9 @@ export default function LeadForm() {
       const response = await createLead(lead);
       alert('Lead created! OTP sent to your email.');
 
+      // Navigate with camelCase leadsId here:
       navigate('/verify-otp', {
-        state: { leads_id: response.lead.leadsId, email: lead.email }
+        state: { leadsId: response.lead.leadsId, email: lead.email }
       });
     } catch (error) {
       alert("Error creating lead: " + (error?.response?.data || error.message));

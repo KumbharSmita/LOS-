@@ -25,6 +25,9 @@ import BankDetailsPage from './pages/BankDetailsPage';
 
 import DocumentUpload from './pages/DocumentUploadpage';
 import DocumentUploadPage from './pages/DocumentUploadpage';
+
+import DocumentReuploadPage from './pages/DocumentReuploadPage';  
+
 function App() {
   return (
     <Router>
@@ -51,6 +54,8 @@ function App() {
         <Route path="/user-login" element={<UserLogin />} />
       <Route path="/bank-details" element={<BankDetailsPage />} />
         <Route path="/document-upload" element={<DocumentUploadPage />} />
+
+        <Route path="/document-reupload" element={<DocumentReuploadPage />} />
       </Routes>
     </Router>
   );

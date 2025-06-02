@@ -4,6 +4,7 @@ import { loginUser } from '../api/userApi';
 import { getLeadStatus } from '../api/underwritingApi';
 import { getDisbursementByLeadId } from '../api/disbursement';
 import { getEmiSchedule } from '../api/loans';
+import { fetchDocumentsByLeadId } from '../api/documentApi';  // Import for fetching documents
 
 const UserLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -17,7 +18,6 @@ const UserLogin = () => {
     setErrorMessage('');
 
     try {
-      // Login API call
       const response = await loginUser(formData);
       alert(response.data.message);
       localStorage.setItem('userEmail', formData.email);
@@ -31,10 +31,27 @@ const UserLogin = () => {
         data = null;
       }
 
-      // If no lead, redirect to lead form
       if (!data || !data.leadsId) {
         navigate('/lead-form');
         return;
+      }
+
+      // --- NEW: Check for reupload requested documents and localStorage flag ---
+      try {
+        const docs = await fetchDocumentsByLeadId(data.leadsId);
+        const reuploadRequested = docs.some(doc => doc.reuploadRequested);
+
+        const reuploadDoneFlag = localStorage.getItem(`reuploadDoneForLead_${data.leadsId}`);
+
+        if (reuploadRequested && !reuploadDoneFlag) {
+          navigate('/document-reupload', { state: { leadsId: data.leadsId } });
+          return; // stop further navigation here
+        } else if (reuploadDoneFlag) {
+          // Clear the flag so next login is clean
+          localStorage.removeItem(`reuploadDoneForLead_${data.leadsId}`);
+        }
+      } catch {
+        // If docs fetch fails, proceed as normal or show message
       }
 
       // Step 2: Check disbursement status
@@ -46,7 +63,6 @@ const UserLogin = () => {
       }
 
       if (disbursementData && disbursementData.status === 'SUCCESS') {
-        // Step 3: Fetch EMI schedule if disbursed
         let emiSchedule = [];
         try {
           emiSchedule = await getEmiSchedule(data.leadsId);
@@ -60,7 +76,6 @@ const UserLogin = () => {
         return;
       }
 
-      // Step 4: If underwriting decision available
       if (data.decision) {
         navigate('/underwriting-result', {
           state: {
@@ -75,7 +90,6 @@ const UserLogin = () => {
         return;
       }
 
-      // Step 5: Otherwise, go to lead status (likely pending)
       navigate('/lead-status', {
         state: {
           leadsId: data.leadsId,

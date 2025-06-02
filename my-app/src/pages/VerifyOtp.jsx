@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { verifyOtp, resendOtp } from '../api/auth'; // ensure these exist
+import { verifyOtp, resendOtp } from '../api/auth';
 
 export default function VerifyOtp() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { leads_id, email } = location.state || {};
+
+   const { leadsId, email } = location.state || {};
+
+   console.log("VerifyOtp page received state:", location.state);
 
   const [otp, setOtp] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  if (!leads_id || !email) {
+  if (!leadsId || !email) {
     return <div className="text-red-600 p-4">Missing lead data. Please start again from lead form.</div>;
   }
 
@@ -23,21 +26,16 @@ export default function VerifyOtp() {
     setLoading(true);
 
     try {
-      const response = await verifyOtp(leads_id, String(otp));
-      const result = response?.data || response;
+      console.log('Verifying OTP:', { leadsId, otp });
+      const result = await verifyOtp(leadsId, otp);
+      console.log('OTP verification response:', result);
 
-      if (result?.message?.toLowerCase().includes('success')) {
+      if (result?.message?.toLowerCase().includes('otp verified successfully')) {
         setIsSuccess(true);
         setMessage(result.message);
 
-        navigate('/success', {
-          state: {
-            agentInfo: result.agentId,
-            expectedContactTime: result.expectedContactTime,
-            message: result.message,
-            leadsId: leads_id,  // pass leads_id here
-          },
-        });
+        // Navigate to document-upload with leadsId
+        navigate('/document-upload', { state: { leadsId } });
       } else {
         setMessage(result?.message || 'OTP verification failed.');
       }

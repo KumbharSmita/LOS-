@@ -7,9 +7,7 @@ import {
   resendLoanConfirmationOtp,
 } from '../api/borrowerSelection';
 import { fetchUnderwritingByLeadId } from '../api/underwriting';
-import { submitBankDetails } from '../api/bankDetails';
-
-// Import your disbursement OTP API functions
+import { submitBankDetails, getBankDetails } from '../api/bankDetails';
 import {
   generateOtp as generateDisbursementOtp,
   verifyOtp as verifyDisbursementOtp,
@@ -49,10 +47,10 @@ function UnderwritingResultPage() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
 
+  // Fetch underwriting data and send OTP on load
   useEffect(() => {
     const fetchData = async () => {
       if (!leadsId) return;
-
       try {
         const data = await fetchUnderwritingByLeadId(leadsId);
         setUnderwritingData(data);
@@ -73,10 +71,10 @@ function UnderwritingResultPage() {
     fetchData();
   }, [leadsId]);
 
+  // Fetch confirmation status on load
   useEffect(() => {
     const fetchConfirmation = async () => {
       if (!leadsId) return;
-
       try {
         const data = await getLoanConfirmation(parseInt(leadsId));
         if (data?.confirmedAmount && data?.confirmedTenureMonths) {
@@ -95,6 +93,31 @@ function UnderwritingResultPage() {
 
     fetchConfirmation();
   }, [leadsId]);
+
+  // Fetch existing bank details if loan is confirmed
+  useEffect(() => {
+    const fetchBank = async () => {
+      if (!leadsId || !isConfirmed) return;
+      try {
+        const bankData = await getBankDetails(leadsId);
+        if (bankData) {
+          setBankDetails({
+            accountHolderName: bankData.accountHolderName || '',
+            accountNumber: bankData.accountNumber || '',
+            ifscCode: bankData.ifscCode || '',
+          });
+          setBankDetailsSubmitted(true);
+        }
+      } catch (err) {
+        // Ignore 204 no content error
+        if (err.response?.status !== 204) {
+          console.error('Failed to fetch existing bank details');
+        }
+      }
+    };
+
+    fetchBank();
+  }, [leadsId, isConfirmed]);
 
   const handleConfirmClick = async () => {
     setError('');
@@ -124,13 +147,11 @@ function UnderwritingResultPage() {
     }
   };
 
-  // Bank details input handler
   const handleBankInputChange = (e) => {
     const { name, value } = e.target;
     setBankDetails((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Bank details submit handler
   const handleBankDetailsSubmit = async (e) => {
     e.preventDefault();
     setBankError('');
@@ -144,8 +165,6 @@ function UnderwritingResultPage() {
       await submitBankDetails(leadsId, bankDetails);
       setBankDetailsSubmitted(true);
       setBankMessage('Bank details submitted successfully.');
-
-      // Generate disbursement OTP right after bank details submission
       await generateDisbursementOtp(parseInt(leadsId));
       setOtpMessage('OTP sent to your email for disbursement verification.');
     } catch (err) {
@@ -155,7 +174,6 @@ function UnderwritingResultPage() {
     }
   };
 
-  // Disbursement OTP handlers
   const handleDisbursementOtpChange = (e) => {
     setDisbursementOtp(e.target.value);
   };
@@ -211,33 +229,15 @@ function UnderwritingResultPage() {
       <h2 className="text-xl font-bold mb-4 text-center text-blue-700">Underwriting Result</h2>
 
       <div className="space-y-2 text-gray-800">
-        <p>
-          <strong>Lead ID:</strong> {leadsId}
-        </p>
-        <p>
-          <strong>Decision:</strong> {decision}
-        </p>
-        <p>
-          <strong>Risk Rating:</strong> {riskRating}
-        </p>
-        <p>
-          <strong>Approved Amount:</strong> ₹{approvedAmount}
-        </p>
-        <p>
-          <strong>Rate of Interest:</strong> {rateOfInterest ? `${rateOfInterest}%` : 'N/A'}
-        </p>
-        <p>
-          <strong>Tenure (Months):</strong> {approvedTenure ?? 'N/A'}
-        </p>
-        <p>
-          <strong>Agent ID:</strong> {agentId || 'N/A'}
-        </p>
-        <p>
-          <strong>Notes:</strong> {underwriterNotes}
-        </p>
-        <p>
-          <strong>Evaluated At:</strong> {new Date(evaluatedAt).toLocaleString()}
-        </p>
+        <p><strong>Lead ID:</strong> {leadsId}</p>
+        <p><strong>Decision:</strong> {decision}</p>
+        <p><strong>Risk Rating:</strong> {riskRating}</p>
+        <p><strong>Approved Amount:</strong> ₹{approvedAmount}</p>
+        <p><strong>Rate of Interest:</strong> {rateOfInterest ? `${rateOfInterest}%` : 'N/A'}</p>
+        <p><strong>Tenure (Months):</strong> {approvedTenure ?? 'N/A'}</p>
+        <p><strong>Agent ID:</strong> {agentId || 'N/A'}</p>
+        <p><strong>Notes:</strong> {underwriterNotes}</p>
+        <p><strong>Evaluated At:</strong> {new Date(evaluatedAt).toLocaleString()}</p>
       </div>
 
       {isApproved ? (
@@ -249,21 +249,11 @@ function UnderwritingResultPage() {
                   Your loan selection, bank details, and disbursement OTP have been verified successfully.
                 </p>
                 <div className="bg-gray-50 p-4 rounded shadow text-gray-800">
-                  <p>
-                    <strong>Confirmed Amount:</strong> ₹{amount}
-                  </p>
-                  <p>
-                    <strong>Tenure:</strong> {tenure} months
-                  </p>
-                  <p>
-                    <strong>Bank Account Holder Name:</strong> {bankDetails.accountHolderName}
-                  </p>
-                  <p>
-                    <strong>Bank Account Number:</strong> {bankDetails.accountNumber}
-                  </p>
-                  <p>
-                    <strong>Bank IFSC Code:</strong> {bankDetails.ifscCode}
-                  </p>
+                  <p><strong>Confirmed Amount:</strong> ₹{amount}</p>
+                  <p><strong>Tenure:</strong> {tenure} months</p>
+                  <p><strong>Bank Account Holder Name:</strong> {bankDetails.accountHolderName}</p>
+                  <p><strong>Bank Account Number:</strong> {bankDetails.accountNumber}</p>
+                  <p><strong>Bank IFSC Code:</strong> {bankDetails.ifscCode}</p>
                 </div>
               </div>
             ) : (
@@ -300,11 +290,55 @@ function UnderwritingResultPage() {
               </div>
             )
           ) : (
-            // Bank details form (should not appear after submission)
-            <p className="text-center text-red-600">Please submit bank details first.</p>
+            <form onSubmit={handleBankDetailsSubmit} className="mt-6 space-y-4">
+              <h3 className="text-lg font-semibold text-center">Submit Bank Details for Disbursement</h3>
+              <div>
+                <label className="block font-medium mb-1">Account Holder Name</label>
+                <input
+                  type="text"
+                  name="accountHolderName"
+                  value={bankDetails.accountHolderName}
+                  onChange={handleBankInputChange}
+                  className="w-full border p-2 rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Account Number</label>
+                <input
+                  type="text"
+                  name="accountNumber"
+                  value={bankDetails.accountNumber}
+                  onChange={handleBankInputChange}
+                  className="w-full border p-2 rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1">IFSC Code</label>
+                <input
+                  type="text"
+                  name="ifscCode"
+                  value={bankDetails.ifscCode}
+                  onChange={handleBankInputChange}
+                  className="w-full border p-2 rounded"
+                  required
+                />
+              </div>
+              <div className="text-center">
+                <button
+                  type="submit"
+                  disabled={bankLoading}
+                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                >
+                  {bankLoading ? 'Submitting...' : 'Submit Bank Details'}
+                </button>
+              </div>
+              {bankError && <p className="text-red-600 text-center">{bankError}</p>}
+              {bankMessage && <p className="text-green-600 text-center">{bankMessage}</p>}
+            </form>
           )
         ) : (
-          // Loan confirmation form
           <div className="mt-6 space-y-4">
             <div>
               <label className="block font-medium mb-1">Confirmed Amount (₹)</label>
@@ -354,57 +388,6 @@ function UnderwritingResultPage() {
         <p className="mt-6 text-center text-red-600 font-medium">
           Unfortunately, your loan application was not approved.
         </p>
-      )}
-
-      {/* Show bank details form only after loan confirmation and before bank submission */}
-      {isApproved && isConfirmed && !bankDetailsSubmitted && (
-        <form onSubmit={handleBankDetailsSubmit} className="mt-6 space-y-4">
-          <h3 className="text-lg font-semibold text-center">Submit Bank Details for Disbursement</h3>
-          <div>
-            <label className="block font-medium mb-1">Account Holder Name</label>
-            <input
-              type="text"
-              name="accountHolderName"
-              value={bankDetails.accountHolderName}
-              onChange={handleBankInputChange}
-              className="w-full border p-2 rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Account Number</label>
-            <input
-              type="text"
-              name="accountNumber"
-              value={bankDetails.accountNumber}
-              onChange={handleBankInputChange}
-              className="w-full border p-2 rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">IFSC Code</label>
-            <input
-              type="text"
-              name="ifscCode"
-              value={bankDetails.ifscCode}
-              onChange={handleBankInputChange}
-              className="w-full border p-2 rounded"
-              required
-            />
-          </div>
-          <div className="text-center">
-            <button
-              type="submit"
-              disabled={bankLoading}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            >
-              {bankLoading ? 'Submitting...' : 'Submit Bank Details'}
-            </button>
-          </div>
-          {bankError && <p className="text-red-600 text-center">{bankError}</p>}
-          {bankMessage && <p className="text-green-600 text-center">{bankMessage}</p>}
-        </form>
       )}
     </div>
   );
