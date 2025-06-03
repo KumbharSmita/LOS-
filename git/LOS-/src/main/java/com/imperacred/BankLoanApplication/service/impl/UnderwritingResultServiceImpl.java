@@ -195,4 +195,32 @@ public class UnderwritingResultServiceImpl implements UnderwritingResultsService
             ))
             .toList();
     }
+    @Override
+    public List<UnderwritingResultsDTO> getUnderwritingResultsByLoggedInAgent(HttpServletRequest request) {
+        String userEmail = authContext.getLoggedInUserEmail(request);
+        Role userRole = authContext.getLoggedInUserRole(request);
+
+        if (userRole != Role.ADMIN) {
+            throw new RuntimeException("Access denied: Only agents with ADMIN role can view underwriting results.");
+        }
+
+        Agents agent = agentsRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Logged-in agent not found"));
+
+        List<UnderwritingResults> results = underwritingResultRepository.findByAgentId(agent.getAgent_id());
+
+        return results.stream().map(result -> new UnderwritingResultsDTO(
+                result.getResultId(),
+                result.getLeadsId(),
+                result.getRiskRating(),
+                result.getApprovedAmount(),
+                result.getDecision(),
+                result.getUnderwriterNotes(),
+                result.getEvaluatedAt(),
+                result.getAgentId(),
+                result.getRateOfInterest(),
+                result.getTenureMonths()
+        )).toList();
+    }
+
 }

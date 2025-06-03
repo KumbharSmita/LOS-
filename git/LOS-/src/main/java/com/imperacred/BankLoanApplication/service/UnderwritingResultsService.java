@@ -20,4 +20,7 @@ public interface UnderwritingResultsService {
 
 	    UnderwritingResultsDTO getUnderwritingByLeadId(Integer leadsId);
 	    List<UnderwritingResultsDTO> getAllUnderwritingResults();
+
+		List<UnderwritingResultsDTO> getUnderwritingResultsByLoggedInAgent(HttpServletRequest request);
 }
+

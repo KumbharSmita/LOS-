@@ -54,10 +54,11 @@ public class DisbursementsController {
                     disbursement.getApprovedAmount(),
                     disbursement.getProcessingFee(),
                     disbursement.getDisbursedAmount(),
+                    disbursement.getBankAccount(),
                     disbursement.getUtrNumber(),
                     disbursement.getDisbursedAt(),
                     disbursement.getStatus(),
-                    null // disbursementOtp is @JsonIgnore, and not returned
+                    null 
             );
 
             logger.info("Successfully fetched disbursement details for leadsId: {}", leadsId);

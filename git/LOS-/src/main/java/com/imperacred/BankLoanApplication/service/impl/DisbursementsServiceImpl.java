@@ -159,6 +159,7 @@ public class DisbursementsServiceImpl implements DisbursementsService {
         //disbursementsDTO.setRateOfInterest(rateOfInterest);
         disbursementsDTO.setProcessingFee(processingFee);
         disbursementsDTO.setDisbursedAmount(disbursedAmount);
+        disbursementsDTO.setBankAccount(bankAccount);
         disbursementsDTO.setUtrNumber(disbursements.getUtrNumber());
         disbursementsDTO.setDisbursedAt(disbursements.getDisbursedAt());
         disbursementsDTO.setStatus(disbursements.getStatus());

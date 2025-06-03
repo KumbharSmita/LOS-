@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.imperacred.BankLoanApplication.config.AuthContext;
 import com.imperacred.BankLoanApplication.dto.LeadStatusRequestDTO;
 import com.imperacred.BankLoanApplication.dto.UnderwritingResultsDTO;
+import com.imperacred.BankLoanApplication.model.Role;
 import com.imperacred.BankLoanApplication.model.UnderwritingResults;
 import com.imperacred.BankLoanApplication.repository.LeadsRepository;
 import com.imperacred.BankLoanApplication.repository.UnderwritingResultsRepository;
@@ -35,6 +37,8 @@ public class UnderwritingResultsController {
 
     @Autowired
     private UnderwritingResultsRepository underwritingResultsRepository;
+    @Autowired
+    private AuthContext authContext;
 
     
     @PostMapping("/underwrite")
@@ -76,11 +80,21 @@ public class UnderwritingResultsController {
 
     
     @GetMapping("/all")
-    public ResponseEntity<List<UnderwritingResultsDTO>> getAllUnderwritingResults() {
-        logger.info("Fetching all underwriting results");
+    public ResponseEntity<?> getAllUnderwritingResults(HttpServletRequest request) {
+        Role role = authContext.getLoggedInUserRole(request);
+
+        if (role != Role.SUPER_ADMIN) {
+            logger.warn("Access denied. Role {} is not authorized to view all underwriting results", role);
+            return ResponseEntity.status(403).body(
+                Map.of("message", "Access denied. Only Super Admin can access all underwriting results.")
+            );
+        }
+
+        logger.info("Super Admin accessing all underwriting results");
         List<UnderwritingResultsDTO> results = underwritingService.getAllUnderwritingResults();
         return ResponseEntity.ok(results);
     }
+
 
    
     @PostMapping("/lead-status")
@@ -122,4 +136,14 @@ public class UnderwritingResultsController {
                     Map.of("message", "Lead not found for email: " + request.getEmail()));
         });
     }
+    
+    @GetMapping("/my-underwriting")
+    public ResponseEntity<List<UnderwritingResultsDTO>> getUnderwritingResultsForLoggedInAgent(HttpServletRequest request) {
+        logger.info("Fetching underwriting results for the logged-in agent");
+
+        List<UnderwritingResultsDTO> results = underwritingService.getUnderwritingResultsByLoggedInAgent(request);
+
+        return ResponseEntity.ok(results);
+    }
+
 }

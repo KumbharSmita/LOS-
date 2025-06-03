@@ -19,7 +19,7 @@ public class DisbursementsDTO {
 	//private BigDecimal rateOfInterest;
 	private BigDecimal processingFee;
 	private BigDecimal disbursedAmount;
-	//private String bankAccount;
+	private String bankAccount;
 	private String utrNumber;
 	private LocalDateTime disbursedAt;
 	private String status;

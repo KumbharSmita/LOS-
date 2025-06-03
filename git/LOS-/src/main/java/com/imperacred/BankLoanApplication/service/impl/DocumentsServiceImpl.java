@@ -42,6 +42,28 @@ public class DocumentsServiceImpl implements DocumentsService {
         logger.info("Uploading document for leadId: {}, documentType: {}", leadId, documentType);
 
         try {
+            List<Documents> existingDocs = documentsRepository.findByLeadsId(leadId);
+
+            long salarySlipCount = existingDocs.stream()
+                    .filter(doc -> doc.getDocumentType().toLowerCase().startsWith("salary slip"))
+                    .count();
+
+            Optional<Documents> existingDocOpt = documentsRepository.findByLeadsIdAndDocumentType(leadId, documentType);
+
+            boolean isDuplicate = existingDocOpt.isPresent();
+
+            if (documentType.toLowerCase().startsWith("salary slip")) {
+                if (isDuplicate && !existingDocOpt.get().getReuploadRequested()) {
+                    // Duplicate salary slip with NO reupload requested → block
+                    throw new RuntimeException("This month's salary slip is already uploaded.");
+                }
+                if (!isDuplicate && salarySlipCount >= 3) {
+                    // New salary slip but already 3 uploaded → block
+                    throw new RuntimeException("Only 3 months of salary slips are allowed.");
+                }
+            }
+
+            // Save file to disk
             String userHome = System.getProperty("user.home");
             String desktopUploadsDir = userHome + File.separator + "Desktop" + File.separator + "uploads";
             Files.createDirectories(Paths.get(desktopUploadsDir));
@@ -50,27 +72,33 @@ public class DocumentsServiceImpl implements DocumentsService {
             String filePath = desktopUploadsDir + File.separator + fileName;
             file.transferTo(new File(filePath));
 
-           
-            Optional<Documents> existingDocOpt = documentsRepository.findByLeadsIdAndDocumentType(leadId, documentType);
-            existingDocOpt.ifPresent(existingDoc -> {
-                if (Boolean.TRUE.equals(existingDoc.getReuploadRequested())) {
-                    logger.info("Resetting reuploadRequested flag for document ID: {}", existingDoc.getDocumentId());
-                    existingDoc.setReuploadRequested(false);
-                    documentsRepository.save(existingDoc);
+            Documents doc;
+            if (isDuplicate) {
+                // If reuploadRequested == true, overwrite existing doc and reset flag
+                doc = existingDocOpt.get();
+                if (Boolean.TRUE.equals(doc.getReuploadRequested())) {
+                    logger.info("Overwriting existing document ID {} for reupload", doc.getDocumentId());
+                    doc.setFilePath(filePath);
+                    doc.setUploadedAt(LocalDateTime.now());
+                    doc.setReuploadRequested(false);  // reset flag
+                } else {
+                    // Defensive: should not reach here because of earlier check
+                    throw new RuntimeException("Duplicate document upload not allowed without reupload request.");
                 }
-            });
-
-            // Save new document
-            Documents doc = new Documents();
-            doc.setLeadsId(leadId);
-            doc.setDocumentType(documentType);
-            doc.setFilePath(filePath);
-            doc.setUploadedAt(LocalDateTime.now());
-            doc.setReuploadRequested(false);
+            } else {
+                // New document upload
+                doc = new Documents();
+                doc.setLeadsId(leadId);
+                doc.setDocumentType(documentType);
+                doc.setFilePath(filePath);
+                doc.setUploadedAt(LocalDateTime.now());
+                doc.setReuploadRequested(false);
+            }
 
             Documents savedDoc = documentsRepository.save(doc);
             logger.info("Document saved successfully. ID: {}, Path: {}", savedDoc.getDocumentId(), filePath);
 
+            // Continue with lead assignment logic
             maybeAssignLeadAfterDocumentUpload(leadId);
 
             return mapToDTO(savedDoc);
@@ -96,11 +124,15 @@ public class DocumentsServiceImpl implements DocumentsService {
                 .map(String::toLowerCase)
                 .collect(Collectors.toList());
 
-        boolean hasSalarySlip = uploadedDocs.contains("salary slip");
-        boolean hasBankStatement = uploadedDocs.contains("bank statement");
+        long salarySlipCount = uploadedDocs.stream()
+                .filter(doc -> doc.startsWith("salary slip"))
+                .count();
 
-        if (hasSalarySlip && hasBankStatement) {
-            logger.info("All required documents uploaded for leadId: {}. Assigning agent...", leadId);
+        boolean hasBankStatement = uploadedDocs.contains("bank statement");
+        boolean hasEnoughSalarySlips = salarySlipCount >= 3;
+
+        if (hasEnoughSalarySlips && hasBankStatement) {
+            logger.info("Required documents uploaded for leadId: {}. Proceeding with lead assignment...", leadId);
 
             if ("LEAD ASSIGNED".equalsIgnoreCase(lead.getStatus())) {
                 logger.info("Lead ID {} is already assigned. Skipping reassignment.", leadId);
@@ -108,7 +140,6 @@ public class DocumentsServiceImpl implements DocumentsService {
             }
 
             LeadAssignmentResponseDTO assignment = leadAssignmentService.assignLeadToAgent(leadId);
-
             lead.setStatus("LEAD ASSIGNED");
             leadsRepository.save(lead);
 
@@ -123,7 +154,7 @@ public class DocumentsServiceImpl implements DocumentsService {
             logger.info("Email notification sent to {} for agent assignment.", lead.getEmail());
 
         } else {
-            logger.info("Documents incomplete for leadId: {}. Awaiting both Salary Slip and Bank Statement.", leadId);
+            logger.info("Documents incomplete for leadId: {}. Awaiting 3 Salary Slips and 1 Bank Statement.", leadId);
         }
     }
 

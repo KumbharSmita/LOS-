@@ -13,5 +13,8 @@ public interface UnderwritingResultsRepository extends JpaRepository<Underwritin
 	
 	List<UnderwritingResults> findByLeadsId(Integer leadsId);
 
+	List<UnderwritingResults> findByAgentId(Integer agent_id);
+
 }
+
 
