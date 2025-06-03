@@ -16,15 +16,22 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-export const performUnderwriting = async (leadId, approvedAmount, rateOfInterest, tenureMonths) => {
+
+export const performUnderwriting = async ({
+  leadId,
+  approvedAmount,
+  rateOfInterest,
+  tenureMonths,
+}) => {
   const response = await axiosInstance.post('/underwrite', {
     leadsId: leadId,
-    approvedAmount: approvedAmount,
-    rateOfInterest: rateOfInterest,
-    tenureMonths: tenureMonths,
+    approvedAmount,
+    rateOfInterest,
+    tenureMonths,
   });
   return response.data;
 };
+
 // Get all underwriting results
 export const fetchAllUnderwritingResults = async () => {
   const response = await axiosInstance.get('/all');
@@ -34,5 +41,9 @@ export const fetchAllUnderwritingResults = async () => {
 // Get underwriting result by leadId
 export const fetchUnderwritingByLeadId = async (leadId) => {
   const response = await axiosInstance.get(`/${leadId}`);
+  return response.data;
+};
+export const fetchMyUnderwritingResults = async () => {
+  const response = await axiosInstance.get('/my-underwriting');
   return response.data;
 };
