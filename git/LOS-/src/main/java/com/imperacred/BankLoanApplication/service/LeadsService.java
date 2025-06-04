@@ -1,7 +1,11 @@
 package com.imperacred.BankLoanApplication.service;
 
+import java.util.Optional;
+
+
 import com.imperacred.BankLoanApplication.dto.LeadVerificationResponseDTO;
 import com.imperacred.BankLoanApplication.dto.LeadsDTO;
+import com.imperacred.BankLoanApplication.model.Lead;
 
 public interface LeadsService {
 
@@ -13,7 +17,10 @@ public interface LeadsService {
     // Method to resend OTP for an existing lead
     String resendOtp(String email);
 
+	Optional<Lead> findLeadById(Integer leadsId);
+
 	
 }
+
 
 

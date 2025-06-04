@@ -57,34 +57,36 @@ public class DocumentsController {
 
 	@GetMapping("/download/{documentId}")
 	public ResponseEntity<Resource> downloadDocument(@PathVariable Integer documentId) throws IOException {
-		logger.info(" Download request received for document ID: {}", documentId);
+	    logger.info("View request received for document ID: {}", documentId);
 
-		Documents doc = documentsService.getDocumentById(documentId);
-		File file = new File(doc.getFilePath());
+	    Documents doc = documentsService.getDocumentById(documentId);
+	    File file = new File(doc.getFilePath());
 
-		if (!file.exists()) {
-			logger.error(" File not found on server for document ID: {} | Path: {}", documentId, doc.getFilePath());
-			return ResponseEntity.notFound().build();
-		}
+	    if (!file.exists()) {
+	        logger.error("File not found on server for document ID: {} | Path: {}", documentId, doc.getFilePath());
+	        return ResponseEntity.notFound().build();
+	    }
 
-		try {
-			InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-			String contentType = Files.probeContentType(file.toPath());
-			if (contentType == null) {
-				contentType = "application/octet-stream";
-			}
+	    try {
+	        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+	        String contentType = Files.probeContentType(file.toPath());
+	        if (contentType == null) {
+	            contentType = "application/octet-stream";
+	        }
 
-			logger.info(" Serving document ID: {} | File: {} | Size: {} bytes | Content-Type: {}", documentId,
-					file.getName(), file.length(), contentType);
+	        logger.info("Serving document ID: {} | File: {} | Size: {} bytes | Content-Type: {}", documentId,
+	                file.getName(), file.length(), contentType);
 
-			return ResponseEntity.ok()
-					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
-					.contentLength(file.length()).contentType(MediaType.parseMediaType(contentType)).body(resource);
+	        return ResponseEntity.ok()
+	                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
+	                .contentLength(file.length())
+	                .contentType(MediaType.parseMediaType(contentType))
+	                .body(resource);
 
-		} catch (IOException e) {
-			logger.error(" Error while streaming document ID: {}", documentId, e);
-			throw e;
-		}
+	    } catch (IOException e) {
+	        logger.error("Error while streaming document ID: {}", documentId, e);
+	        throw e;
+	    }
 	}
 
 	@PostMapping("/request-reupload")

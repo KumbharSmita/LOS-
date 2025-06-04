@@ -1,9 +1,11 @@
 package com.imperacred.BankLoanApplication.config;
 
-import com.imperacred.BankLoanApplication.filter.JwtAuthenticationFilter;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -13,7 +15,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import com.imperacred.BankLoanApplication.filter.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -46,10 +48,16 @@ public class SecurityConfig {
                 "/api/borrower-selection/**",
                 "/api/bank/**",
                 "/api/documents/**",
-                "/api/underwriting/lead-status"
+              
+                "/api/underwriting/lead-status",
+                HttpMethod.GET.name(), "/api/underwriting/*"
+               
+               
             ).permitAll()
+            
                 .requestMatchers("/api/lead-status-history/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/api/agent-activity/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+               
                 .requestMatchers("/api/underwriting/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             .and()

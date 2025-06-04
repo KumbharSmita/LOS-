@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.imperacred.BankLoanApplication.dto.LeadAssignmentRequestDTO;
 import com.imperacred.BankLoanApplication.dto.LeadAssignmentResponseDTO;
+import com.imperacred.BankLoanApplication.exception.LeadAssignmentException;
 import com.imperacred.BankLoanApplication.service.LeadAssignmentService;
 
 import jakarta.validation.Valid;
@@ -26,25 +27,39 @@ public class LeadAssignmentController {
     }
 
     @PostMapping("/assign")
-    public ResponseEntity<LeadAssignmentResponseDTO> assignLead(@RequestBody @Valid LeadAssignmentRequestDTO request) {
+    public ResponseEntity<?> assignLead(@RequestBody @Valid LeadAssignmentRequestDTO request) {
         Integer leadId = request.getLeadsId();
+
         if (leadId == null) {
-            logger.error("Lead ID in request is null. Cannot proceed with assignment.");
-            return ResponseEntity.badRequest().body(null); 
+            logger.error(" Lead ID in request is null. Cannot proceed with assignment.");
+            return ResponseEntity.badRequest().body(" Lead ID cannot be null.");
         }
 
-        logger.info("Received lead assignment request for lead ID: {}", leadId);
+        logger.info(" Received lead assignment request for lead ID: {}", leadId);
 
         try {
             LeadAssignmentResponseDTO response = leadAssignmentService.assignLeadToAgent(leadId);
-            logger.info("Lead successfully assigned: Lead {} {} -> Agent ID {}",
+
+            logger.info(" Lead successfully assigned: Lead {} {} -> Agent ID {}",
                     response.getLead().getFirstName(),
                     response.getLead().getLastName(),
                     response.getAgent_id());
+
             return ResponseEntity.ok(response);
+
+        } catch (LeadAssignmentException ex) {
+            logger.warn(" Lead assignment rule violated: {}", ex.getMessage());
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(" Lead assignment failed: " + ex.getMessage());
+
         } catch (Exception e) {
-            logger.error("Failed to assign lead with ID {}: {}", leadId, e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+            logger.error(" Unexpected error during lead assignment for ID {}: {}", leadId, e.getMessage(), e);
+
+            return ResponseEntity
+                    .internalServerError()
+                    .body(" An unexpected error occurred while assigning the lead. Please try again later.");
         }
     }
 

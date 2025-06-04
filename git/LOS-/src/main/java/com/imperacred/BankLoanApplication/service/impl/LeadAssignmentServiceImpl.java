@@ -11,9 +11,12 @@ import org.springframework.stereotype.Service;
 
 import com.imperacred.BankLoanApplication.dto.LeadAssignmentResponseDTO;
 import com.imperacred.BankLoanApplication.dto.LeadsDTO;
+import com.imperacred.BankLoanApplication.exception.LeadAssignmentException;
 import com.imperacred.BankLoanApplication.model.AgentLoads;
+import com.imperacred.BankLoanApplication.model.Agents;
 import com.imperacred.BankLoanApplication.model.Lead;
 import com.imperacred.BankLoanApplication.model.LeadAssignments;
+import com.imperacred.BankLoanApplication.model.Role;
 import com.imperacred.BankLoanApplication.repository.AgentLoadsRepository;
 import com.imperacred.BankLoanApplication.repository.LeadAssignmentRepository;
 import com.imperacred.BankLoanApplication.repository.LeadsRepository;
@@ -43,42 +46,66 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
     public LeadAssignmentResponseDTO assignLeadToAgent(Integer leads_id) {
         logger.info("Starting lead assignment for lead ID: {}", leads_id);
 
-        // Prevent duplicate assignment
         boolean alreadyAssigned = leadAssignmentRepo.existsByLeadsIdAndStatus(leads_id, "ASSIGNED");
         if (alreadyAssigned) {
             logger.info("Lead ID {} is already assigned. Skipping reassignment.", leads_id);
-            throw new IllegalStateException("Lead is already assigned to an agent.");
+            throw new LeadAssignmentException("Lead is already assigned to an agent.");
         }
 
         Lead lead = leadsRepo.findById(leads_id)
                 .orElseThrow(() -> {
                     logger.error("Lead not found with ID: {}", leads_id);
-                    return new RuntimeException("Lead not found");
+                    return new LeadAssignmentException("Lead not found");
                 });
 
-        AgentLoads agentLoads = agentLoadsRepo.findFirstByOrderByLeadCountAscLastAssignedAsc()
-                .orElseThrow(() -> {
-                    logger.error("No available agents for lead assignment");
-                    return new RuntimeException("No agents available");
-                });
+        if (lead.getCreditScore() == null || lead.getCreditScore() < 700) {
+            logger.warn("Lead ID {} has insufficient credit score: {}", leads_id, lead.getCreditScore());
+            throw new LeadAssignmentException("Credit score is too low to assign this lead to an agent.");
+        }
 
-        agentLoads.setLeadCount(agentLoads.getLeadCount() + 1);
-        agentLoads.setLastAssigned(LocalDateTime.now());
-        agentLoadsRepo.save(agentLoads);
+        // Fetch all agents sorted by lead count and last assigned (lowest load first)
+        List<AgentLoads> agentLoadsList = agentLoadsRepo.findAllByOrderByLeadCountAscLastAssignedAsc();
+
+        Agents assignedAgent = null;
+        AgentLoads assignedAgentLoad = null;
+
+        for (AgentLoads agentLoad : agentLoadsList) {
+            Agents agent = agentLoad.getAgent();
+
+            if (agent.getRole() == Role.SUPER_ADMIN) {
+                logger.warn("Skipping agent ID {} with role SUPER_ADMIN for lead assignment.", agent.getAgent_id());
+                continue;  // Skip SUPER_ADMIN agents
+            }
+
+            if (agent.getRole() == Role.ADMIN) {
+                assignedAgent = agent;
+                assignedAgentLoad = agentLoad;
+                break;  // Found suitable agent, stop searching
+            }
+        }
+
+        if (assignedAgent == null) {
+            logger.error("No ADMIN agent available for lead assignment.");
+            throw new LeadAssignmentException("No ADMIN agent available for assignment.");
+        }
+
+        // Proceed with assignment to the found admin agent
+        assignedAgentLoad.setLeadCount(assignedAgentLoad.getLeadCount() + 1);
+        assignedAgentLoad.setLastAssigned(LocalDateTime.now());
+        agentLoadsRepo.save(assignedAgentLoad);
 
         LeadAssignments assignment = new LeadAssignments();
         assignment.setLeadsId(leads_id);
-        assignment.setAgentId(agentLoads.getAgent_id());
+        assignment.setAgentId(assignedAgent.getAgent_id());
         assignment.setAssigned_at(LocalDateTime.now());
         assignment.setStatus("ASSIGNED");
         leadAssignmentRepo.save(assignment);
 
-        // **Log assignment details here**
         logger.info("Lead ID {} ({} {}) assigned to Agent ID {} at {}", 
             leads_id, 
             lead.getFirstName(), 
             lead.getLastName(), 
-            agentLoads.getAgent_id(), 
+            assignedAgent.getAgent_id(), 
             assignment.getAssigned_at());
 
         LeadsDTO leadDTO = new LeadsDTO(
@@ -99,12 +126,11 @@ public class LeadAssignmentServiceImpl implements LeadAssignmentService {
         return new LeadAssignmentResponseDTO(
             assignment.getLead_assignment_id(),
             leadDTO,
-            agentLoads.getAgent_id(),
+            assignedAgent.getAgent_id(),
             assignment.getAssigned_at(),
             assignment.getStatus()
         );
     }
-
 
     @Override
     public List<LeadAssignmentResponseDTO> getAssignedLeadsForAgent(Integer agentId) {

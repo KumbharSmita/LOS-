@@ -4,6 +4,7 @@ import com.imperacred.BankLoanApplication.dto.LeadVerificationResponseDTO;
 import com.imperacred.BankLoanApplication.dto.LeadsDTO;
 import com.imperacred.BankLoanApplication.dto.OtpRequestDTO;
 import com.imperacred.BankLoanApplication.dto.OtpVerificationDTO;
+import com.imperacred.BankLoanApplication.model.Lead;
 import com.imperacred.BankLoanApplication.service.LeadsService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.Map;
+import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -72,4 +74,35 @@ public class LeadsController {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to resend OTP."));
         }
     }
+    @GetMapping("/{leadsId}/credit-score")
+    public ResponseEntity<?> getCreditScore(@PathVariable Integer leadsId) {
+        Optional<Lead> leadOpt = leadsService.findLeadById(leadsId);
+        if (leadOpt.isPresent()) {
+            Lead lead = leadOpt.get();
+            Integer score = lead.getCreditScore();
+            if (score != null) {
+                return ResponseEntity.ok(Map.of("creditScore", score));
+            } else {
+                return ResponseEntity.status(404).body(Map.of("message", "Credit score not available yet."));
+            }
+        } else {
+            return ResponseEntity.status(404).body(Map.of("message", "Lead not found."));
+        }
+    }
+    @GetMapping("/{leadsId}/status")
+    public ResponseEntity<?> getLeadStatus(@PathVariable Integer leadsId) {
+        Optional<Lead> leadOpt = leadsService.findLeadById(leadsId);
+        if (leadOpt.isPresent()) {
+            Lead lead = leadOpt.get();
+            return ResponseEntity.ok(Map.of(
+                "leadId", lead.getLeadsId(),
+                "status", lead.getStatus(),
+                "creditScore", lead.getCreditScore()
+            ));
+        } else {
+            return ResponseEntity.status(404).body(Map.of("message", "Lead not found."));
+        }
+    }
+
+
 }

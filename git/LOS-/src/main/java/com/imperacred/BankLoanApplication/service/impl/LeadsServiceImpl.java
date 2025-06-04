@@ -104,30 +104,46 @@ public class LeadsServiceImpl implements LeadsService {
         Lead lead = leadOpt.get();
 
         if (lead.getCreditScore() != null) {
-            lead.setStatus("OTP VERIFIED");
-            leadsRepository.save(lead);
+            if (lead.getCreditScore() < 700) {
+                lead.setStatus("REJECTED");
+                leadsRepository.save(lead);
 
-            logger.info("OTP verified successfully for Lead ID {}. Awaiting document upload.", leadsId);
+                logger.info("Lead ID {} rejected due to low credit score: {}", leadsId, lead.getCreditScore());
 
-            return new LeadVerificationResponseDTO(
+                return new LeadVerificationResponseDTO(
+                    "Your application is rejected due to low credit score (" + lead.getCreditScore() + ").",
+                    leadsId,
+                    null,
+                    null,
+                    null
+                );
+            } else {
+                lead.setStatus("OTP VERIFIED");
+                leadsRepository.save(lead);
+
+                logger.info("OTP verified successfully for Lead ID {}. Awaiting document upload.", leadsId);
+
+                return new LeadVerificationResponseDTO(
                     "OTP verified successfully. Please upload Salary Slip and Bank Statement to proceed.",
                     leadsId,
                     null,
                     null,
                     null
-            );
+                );
+            }
         } else {
             logger.info("OTP verified but credit score not found for Lead ID {}", leadsId);
 
             return new LeadVerificationResponseDTO(
-                    "OTP verified successfully. Credit score is pending.",
-                    leadsId,
-                    null,
-                    null,
-                    null
+                "OTP verified successfully. Credit score is pending.",
+                leadsId,
+                null,
+                null,
+                null
             );
         }
     }
+
 
     @Override
     public String resendOtp(String email) {
@@ -139,4 +155,9 @@ public class LeadsServiceImpl implements LeadsService {
         Lead lead = leadOpt.get();
         return otpService.resendOtpForLead(lead.getLeadsId(), OTP_TYPE_LEAD_VERIFICATION);
     }
+    @Override
+    public Optional<Lead> findLeadById(Integer leadsId) {
+        return leadsRepository.findById(leadsId);
+    }
+
 }

@@ -113,8 +113,7 @@ public class AgentRegistrationLoginServiceImpl implements AgentRegistrationLogin
 
         // Create entry in agent_loads table
         AgentLoads agentLoad = new AgentLoads();
-        agentLoad.setAgent_id(basicAgent.getAgent_id());  // Assuming basicAgent has the getAgent_id method
-        agentLoad.setLeadCount(0); // Initial lead count set to 0
+        agentLoad.setAgent(basicAgent);         agentLoad.setLeadCount(0); // Initial lead count set to 0
         agentLoad.setLastAssigned(null); // No assignment yet, set to null (or LocalDateTime.now() if desired)
         agentLoadRepository.save(agentLoad);
 

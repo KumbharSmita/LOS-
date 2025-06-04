@@ -41,26 +41,31 @@ public class DocumentsServiceImpl implements DocumentsService {
     public DocumentsDTO uploadDocument(Integer leadId, String documentType, MultipartFile file) {
         logger.info("Uploading document for leadId: {}, documentType: {}", leadId, documentType);
 
+        // Early check for lead and credit score
+        Lead lead = leadsRepository.findById(leadId)
+                .orElseThrow(() -> new RuntimeException("Lead not found with ID: " + leadId));
+
+        if (lead.getCreditScore() == null || lead.getCreditScore() < 700) {
+            String msg = "Document upload not allowed. Credit score must be 700 or above.";
+            logger.warn("Lead ID {} blocked from upload: {}", leadId, msg);
+            throw new RuntimeException(msg);
+        }
+
         try {
             List<Documents> existingDocs = documentsRepository.findByLeadsId(leadId);
-
-            long salarySlipCount = existingDocs.stream()
-                    .filter(doc -> doc.getDocumentType().toLowerCase().startsWith("salary slip"))
-                    .count();
-
             Optional<Documents> existingDocOpt = documentsRepository.findByLeadsIdAndDocumentType(leadId, documentType);
 
-            boolean isDuplicate = existingDocOpt.isPresent();
+            // Allowed salary slip types - strict three types only
+            List<String> allowedSalarySlips = List.of("salary slip1", "salary slip2", "salary slip3");
 
-            if (documentType.toLowerCase().startsWith("salary slip")) {
-                if (isDuplicate && !existingDocOpt.get().getReuploadRequested()) {
-                    // Duplicate salary slip with NO reupload requested → block
-                    throw new RuntimeException("This month's salary slip is already uploaded.");
+            boolean isSalarySlip = allowedSalarySlips.contains(documentType.toLowerCase());
+
+            if (isSalarySlip) {
+                if (existingDocOpt.isPresent() && !existingDocOpt.get().getReuploadRequested()) {
+                    throw new RuntimeException("This salary slip is already uploaded.");
                 }
-                if (!isDuplicate && salarySlipCount >= 3) {
-                    // New salary slip but already 3 uploaded → block
-                    throw new RuntimeException("Only 3 months of salary slips are allowed.");
-                }
+            } else if (documentType.toLowerCase().startsWith("salary slip")) {
+                throw new RuntimeException("Invalid salary slip type. Allowed types: salary slip1, salary slip2, salary slip3 only.");
             }
 
             // Save file to disk
@@ -73,20 +78,17 @@ public class DocumentsServiceImpl implements DocumentsService {
             file.transferTo(new File(filePath));
 
             Documents doc;
-            if (isDuplicate) {
-                // If reuploadRequested == true, overwrite existing doc and reset flag
+            if (existingDocOpt.isPresent()) {
                 doc = existingDocOpt.get();
                 if (Boolean.TRUE.equals(doc.getReuploadRequested())) {
                     logger.info("Overwriting existing document ID {} for reupload", doc.getDocumentId());
                     doc.setFilePath(filePath);
                     doc.setUploadedAt(LocalDateTime.now());
-                    doc.setReuploadRequested(false);  // reset flag
+                    doc.setReuploadRequested(false);
                 } else {
-                    // Defensive: should not reach here because of earlier check
                     throw new RuntimeException("Duplicate document upload not allowed without reupload request.");
                 }
             } else {
-                // New document upload
                 doc = new Documents();
                 doc.setLeadsId(leadId);
                 doc.setDocumentType(documentType);
@@ -98,7 +100,6 @@ public class DocumentsServiceImpl implements DocumentsService {
             Documents savedDoc = documentsRepository.save(doc);
             logger.info("Document saved successfully. ID: {}, Path: {}", savedDoc.getDocumentId(), filePath);
 
-            // Continue with lead assignment logic
             maybeAssignLeadAfterDocumentUpload(leadId);
 
             return mapToDTO(savedDoc);
@@ -113,17 +114,26 @@ public class DocumentsServiceImpl implements DocumentsService {
         Lead lead = leadsRepository.findById(leadId)
                 .orElseThrow(() -> new RuntimeException("Lead not found with ID: " + leadId));
 
+        // Check lead eligibility: status must be "OTP VERIFIED" and credit score present
         if (!"OTP VERIFIED".equalsIgnoreCase(lead.getStatus()) || lead.getCreditScore() == null) {
             logger.info("Lead ID {} not eligible for assignment yet (status: {}, creditScore: {})",
                     leadId, lead.getStatus(), lead.getCreditScore());
             return;
         }
 
+        // Additional credit score threshold check
+        if (lead.getCreditScore() < 700) {
+            logger.info("Lead ID {} credit score {} is below threshold, skipping assignment.", leadId, lead.getCreditScore());
+            return;
+        }
+
+        // Fetch document types uploaded for this lead
         List<String> uploadedDocs = documentsRepository.findByLeadsId(leadId).stream()
                 .map(Documents::getDocumentType)
                 .map(String::toLowerCase)
                 .collect(Collectors.toList());
 
+        // Count how many salary slips uploaded
         long salarySlipCount = uploadedDocs.stream()
                 .filter(doc -> doc.startsWith("salary slip"))
                 .count();
@@ -131,18 +141,22 @@ public class DocumentsServiceImpl implements DocumentsService {
         boolean hasBankStatement = uploadedDocs.contains("bank statement");
         boolean hasEnoughSalarySlips = salarySlipCount >= 3;
 
+        // Check if all required documents uploaded
         if (hasEnoughSalarySlips && hasBankStatement) {
             logger.info("Required documents uploaded for leadId: {}. Proceeding with lead assignment...", leadId);
 
+            // Avoid reassignment if already assigned
             if ("LEAD ASSIGNED".equalsIgnoreCase(lead.getStatus())) {
                 logger.info("Lead ID {} is already assigned. Skipping reassignment.", leadId);
                 return;
             }
 
+            // Assign lead to agent
             LeadAssignmentResponseDTO assignment = leadAssignmentService.assignLeadToAgent(leadId);
             lead.setStatus("LEAD ASSIGNED");
             leadsRepository.save(lead);
 
+            // Send notification email with expected contact time
             LocalDateTime expectedContactTime = assignment.getAssigned_at().plusHours(2);
             String body = String.format(
                     "Dear %s,\n\nYour loan application (Lead ID: %d) has been assigned to Agent ID: %d.\n" +
@@ -157,6 +171,7 @@ public class DocumentsServiceImpl implements DocumentsService {
             logger.info("Documents incomplete for leadId: {}. Awaiting 3 Salary Slips and 1 Bank Statement.", leadId);
         }
     }
+
 
     @Override
     public List<DocumentsDTO> getDocumentsByLeadId(Integer leadId) {
