@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { uploadDocument, fetchDocumentsByLeadId } from '../api/documentApi';
 import { fetchAssignmentByLeadId } from '../api/leadAssignments';
 
+const salarySlipOptions = ['salary slip1', 'salary slip2', 'salary slip3'];
+
 const DocumentUploadPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,7 +37,7 @@ const DocumentUploadPage = () => {
 
   const checkAssignmentStatus = async (docs) => {
     const types = docs.map(doc => doc.documentType.toLowerCase());
-    const salarySlips = types.filter(type => type.startsWith('salary slip'));
+    const salarySlips = types.filter(type => salarySlipOptions.includes(type));
     const hasBankStatement = types.includes('bank statement');
 
     if (salarySlips.length >= 3 && hasBankStatement) {
@@ -68,7 +70,7 @@ const DocumentUploadPage = () => {
 
   const hasUploadedAllRequiredDocs = () => {
     const types = documents.map(doc => doc.documentType.toLowerCase());
-    const salarySlips = types.filter(type => type.startsWith('salary slip'));
+    const salarySlips = types.filter(type => salarySlipOptions.includes(type));
     const hasBankStatement = types.includes('bank statement');
     return salarySlips.length >= 3 && hasBankStatement;
   };
@@ -104,13 +106,13 @@ const DocumentUploadPage = () => {
     }
   };
 
-  const salarySlipMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  // Available salary slip options are those not yet uploaded
   const uploadedSalarySlips = documents
     .map(doc => doc.documentType.toLowerCase())
-    .filter(type => type.startsWith('salary slip'));
+    .filter(type => salarySlipOptions.includes(type));
 
-  const availableSalarySlipOptions = salarySlipMonths.filter(month =>
-    !uploadedSalarySlips.includes(`salary slip - ${month.toLowerCase()}`)
+  const availableSalarySlipOptions = salarySlipOptions.filter(
+    slip => !uploadedSalarySlips.includes(slip)
   );
 
   const isUploadDisabled = hasUploadedAllRequiredDocs();
@@ -147,16 +149,16 @@ const DocumentUploadPage = () => {
         >
           <option value="">Select Document Type</option>
 
-          {/* Salary Slip Options (max 3 months) */}
-          {availableSalarySlipOptions.map(month => (
-            <option key={month} value={`Salary Slip - ${month}`}>
-              Salary Slip - {month}
+          {/* Salary Slip options */}
+          {availableSalarySlipOptions.map(slip => (
+            <option key={slip} value={slip}>
+              {slip.charAt(0).toUpperCase() + slip.slice(1)} {/* Capitalize first letter */}
             </option>
           ))}
 
-          {/* Bank Statement (only if not already uploaded) */}
+          {/* Bank Statement (only if not uploaded) */}
           {!documents.some(doc => doc.documentType.toLowerCase() === 'bank statement') && (
-            <option value="Bank Statement">Bank Statement</option>
+            <option value="bank statement">Bank Statement</option>
           )}
         </select>
 

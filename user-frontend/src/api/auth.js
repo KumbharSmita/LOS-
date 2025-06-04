@@ -9,7 +9,7 @@ export const createLead = async (lead) => {
   return res.data;
 };
 
-// Now using camelCase keys for verifyOtp
+
 export const verifyOtp = async (leadsId, otpValue) => {
   console.log('API verifyOtp called with:', { leadsId, otpValue });
   const res = await API.post('/verify-otp', { leadsId, otpValue });
@@ -18,5 +18,9 @@ export const verifyOtp = async (leadsId, otpValue) => {
 
 export const resendOtp = async (email) => {
   const res = await API.post('/resend-otp', { email });
+  return res.data;
+};
+export const getCreditScore = async (leadsId) => {
+  const res = await API.get(`/${leadsId}/credit-score`);
   return res.data;
 };

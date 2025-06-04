@@ -96,7 +96,7 @@ function UnderwritingResults() {
         tenureMonths: parseInt(tenureMonths, 10),
         agentId,
       });
-      setMessage('✅ Underwriting submitted successfully!');
+      setMessage(' Underwriting submitted successfully!');
       setLeadId('');
       setApprovedAmount('');
       setRateOfInterest('');
@@ -138,11 +138,11 @@ function UnderwritingResults() {
 
   const handleAuthError = (error) => {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      setMessage('⚠️ Unauthorized. Please log in again.');
+      setMessage(' Unauthorized. Please log in again.');
       localStorage.clear();
       navigate('/agent-login');
     } else {
-      setMessage('❌ Error: ' + (error.response?.data?.message || 'Something went wrong.'));
+      setMessage(' Error: ' + (error.response?.data?.message || 'Something went wrong.'));
     }
   };
 
@@ -177,9 +177,9 @@ function UnderwritingResults() {
         {message && (
           <div
             className={`p-4 rounded ${
-              message.includes('success') || message.includes('✅')
+              message.includes('success') || message.includes('')
                 ? 'bg-green-100 text-green-800'
-                : message.includes('Unauthorized') || message.includes('⚠️')
+                : message.includes('Unauthorized') || message.includes('')
                 ? 'bg-yellow-100 text-yellow-800'
                 : 'bg-red-100 text-red-800'
             }`}

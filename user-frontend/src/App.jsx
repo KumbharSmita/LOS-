@@ -27,6 +27,8 @@ import DocumentUpload from './pages/DocumentUploadpage';
 import DocumentUploadPage from './pages/DocumentUploadpage';
 
 import DocumentReuploadPage from './pages/DocumentReuploadPage';  
+import RejectedPage from './pages/RejectedPage';
+
 
 function App() {
   return (
@@ -56,6 +58,8 @@ function App() {
         <Route path="/document-upload" element={<DocumentUploadPage />} />
 
         <Route path="/document-reupload" element={<DocumentReuploadPage />} />
+        <Route path="/rejected" element={<RejectedPage />} />
+
       </Routes>
     </Router>
   );

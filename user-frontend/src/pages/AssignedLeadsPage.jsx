@@ -5,7 +5,6 @@ import {
 } from '../api/leadAssignments';
 import {
   fetchDocumentsByLeadId,
-  downloadDocumentById,
   requestReupload,
 } from '../api/documentApi';
 
@@ -69,31 +68,10 @@ const AssignedLeadsPage = () => {
     }
   };
 
-  const downloadDocument = async (documentId, documentType) => {
-    try {
-      const response = await downloadDocumentById(documentId);
-      const blob = new Blob([response.data], {
-        type: response.headers['content-type'] || 'application/pdf',
-      });
-
-      const disposition = response.headers['content-disposition'];
-      let filename = `${documentType}-${documentId}.pdf`;
-      if (disposition && disposition.includes('filename=')) {
-        filename = disposition.split('filename=')[1].replace(/"/g, '');
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      alert('Download failed.');
-      console.error('Download error:', error);
-    }
+  // NEW: View document inline by opening in new tab
+  const viewDocument = (documentId) => {
+    const url = `http://localhost:8080/api/documents/download/${documentId}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleReuploadRequest = async (leadId, documentType) => {
@@ -117,7 +95,9 @@ const AssignedLeadsPage = () => {
         <h1 className="text-3xl font-bold text-blue-700 mb-4">Assigned Leads</h1>
 
         <div className="mb-6">
-          <label htmlFor="statusFilter" className="mr-2 font-semibold">Filter by Status:</label>
+          <label htmlFor="statusFilter" className="mr-2 font-semibold">
+            Filter by Status:
+          </label>
           <select
             id="statusFilter"
             className="p-2 border rounded"
@@ -144,16 +124,39 @@ const AssignedLeadsPage = () => {
               const leadId = assignment.lead.leadsId;
               const docData = documentsData[leadId] || {};
               return (
-                <li key={assignment.lead_assignment_id} className="bg-gray-50 p-4 rounded shadow mb-4">
-                  <p><strong>Lead ID:</strong> {leadId}</p>
-                  <p><strong>Name:</strong> {assignment.lead.firstName} {assignment.lead.lastName}</p>
-                  <p><strong>Email:</strong> {assignment.lead.email}</p>
-                  <p><strong>Phone:</strong> {assignment.lead.phone}</p>
-                  <p><strong>Loan Type:</strong> {assignment.lead.loanType}</p>
-                  <p><strong>Amount:</strong> ₹{assignment.lead.amount}</p>
-                  <p><strong>Tenure:</strong> {assignment.lead.tenureMonths} months</p>
-                  <p><strong>Purpose:</strong> {assignment.lead.purpose}</p>
-                  <p><strong>Assigned At:</strong> {new Date(assignment.assigned_at).toLocaleString()}</p>
+                <li
+                  key={assignment.lead_assignment_id}
+                  className="bg-gray-50 p-4 rounded shadow mb-4"
+                >
+                  <p>
+                    <strong>Lead ID:</strong> {leadId}
+                  </p>
+                  <p>
+                    <strong>Name:</strong> {assignment.lead.firstName}{' '}
+                    {assignment.lead.lastName}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {assignment.lead.email}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {assignment.lead.phone}
+                  </p>
+                  <p>
+                    <strong>Loan Type:</strong> {assignment.lead.loanType}
+                  </p>
+                  <p>
+                    <strong>Amount:</strong> ₹{assignment.lead.amount}
+                  </p>
+                  <p>
+                    <strong>Tenure:</strong> {assignment.lead.tenureMonths} months
+                  </p>
+                  <p>
+                    <strong>Purpose:</strong> {assignment.lead.purpose}
+                  </p>
+                  <p>
+                    <strong>Assigned At:</strong>{' '}
+                    {new Date(assignment.assigned_at).toLocaleString()}
+                  </p>
 
                   <button
                     onClick={() => toggleDocuments(leadId)}
@@ -167,7 +170,9 @@ const AssignedLeadsPage = () => {
                       {docData.loading ? (
                         <p>Loading documents...</p>
                       ) : docData.error ? (
-                        <p className="text-red-600">Error loading documents: {docData.error}</p>
+                        <p className="text-red-600">
+                          Error loading documents: {docData.error}
+                        </p>
                       ) : !docData.documents || docData.documents.length === 0 ? (
                         <p>No documents uploaded for this lead.</p>
                       ) : (
@@ -176,7 +181,8 @@ const AssignedLeadsPage = () => {
                             <li key={doc.documentId}>
                               <div className="flex items-center gap-3">
                                 <span>
-                                  {doc.documentType} - Uploaded at: {new Date(doc.uploadedAt).toLocaleString()}
+                                  {doc.documentType} - Uploaded at:{' '}
+                                  {new Date(doc.uploadedAt).toLocaleString()}
                                   {doc.reuploadRequested && (
                                     <span className="ml-2 text-yellow-600 font-semibold">
                                       (Reupload Requested)
@@ -184,14 +190,16 @@ const AssignedLeadsPage = () => {
                                   )}
                                 </span>
                                 <button
-                                  onClick={() => downloadDocument(doc.documentId, doc.documentType)}
-                                  className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                  onClick={() => viewDocument(doc.documentId)}
+                                  className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                                 >
-                                  Download
+                                  View
                                 </button>
                                 {!doc.reuploadRequested && (
                                   <button
-                                    onClick={() => handleReuploadRequest(leadId, doc.documentType)}
+                                    onClick={() =>
+                                      handleReuploadRequest(leadId, doc.documentType)
+                                    }
                                     className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
                                   >
                                     Request Reupload

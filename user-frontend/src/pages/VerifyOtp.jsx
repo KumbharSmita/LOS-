@@ -1,14 +1,16 @@
+// src/pages/VerifyOtp.jsx
+
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { verifyOtp, resendOtp } from '../api/auth';
+import { verifyOtp, resendOtp, getCreditScore } from '../api/auth';
 
 export default function VerifyOtp() {
   const location = useLocation();
   const navigate = useNavigate();
 
-   const { leadsId, email } = location.state || {};
+  const { leadsId, email } = location.state || {};
 
-   console.log("VerifyOtp page received state:", location.state);
+  console.log("VerifyOtp page received state:", location.state);
 
   const [otp, setOtp] = useState('');
   const [message, setMessage] = useState('');
@@ -16,7 +18,11 @@ export default function VerifyOtp() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   if (!leadsId || !email) {
-    return <div className="text-red-600 p-4">Missing lead data. Please start again from lead form.</div>;
+    return (
+      <div className="text-red-600 p-4">
+        Missing lead data. Please start again from lead form.
+      </div>
+    );
   }
 
   const handleVerify = async (e) => {
@@ -30,17 +36,30 @@ export default function VerifyOtp() {
       const result = await verifyOtp(leadsId, otp);
       console.log('OTP verification response:', result);
 
-      if (result?.message?.toLowerCase().includes('otp verified successfully')) {
-        setIsSuccess(true);
-        setMessage(result.message);
+      if (result?.message?.toLowerCase().includes('otp verified')) {
+        const scoreResult = await getCreditScore(leadsId);
+        console.log('Credit score response:', scoreResult);
 
-        // Navigate to document-upload with leadsId
-        navigate('/document-upload', { state: { leadsId } });
+        const creditScore = scoreResult.creditScore;
+        if (creditScore < 700) {
+          navigate('/rejected');
+        } else {
+          setIsSuccess(true);
+          setMessage(result.message);
+          navigate('/document-upload', { state: { leadsId } });
+        }
       } else {
         setMessage(result?.message || 'OTP verification failed.');
       }
     } catch (err) {
-      setMessage('Error: ' + (err?.message || 'Unknown error'));
+      if (
+        err?.response?.status === 400 &&
+        err?.response?.data?.message?.toLowerCase()?.includes('low credit score')
+      ) {
+        navigate('/rejected');
+      } else {
+        setMessage('Error: ' + (err?.response?.data?.message || err.message || 'Unknown error'));
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +72,7 @@ export default function VerifyOtp() {
       const response = await resendOtp(email);
       setMessage(response?.message || 'OTP resent successfully.');
     } catch (err) {
-      setMessage('Error: ' + (err?.message || 'Failed to resend OTP.'));
+      setMessage('Error: ' + (err?.response?.data?.message || err.message || 'Failed to resend OTP.'));
     } finally {
       setLoading(false);
     }
