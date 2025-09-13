@@ -9,7 +9,7 @@ public interface LeadStatusHistoryService {
 	 
 	  LeadStatusHistoryDTO saveLeadStatusHistory(LeadStatusHistoryDTO dto);
 	 
-	  List<LeadStatusHistoryDTO> getLeadStatusHistory(int leads_id);
+	  List<LeadStatusHistoryDTO> getLeadStatusHistory(Integer leads_id);
 	  List<LeadStatusHistoryDTO> getAgentStatusHistory(int agent_id);
  }
  

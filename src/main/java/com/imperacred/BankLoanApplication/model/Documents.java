@@ -17,8 +17,8 @@ public class Documents {
     @Column(name = "document_id")
     private Integer document_id;
 
-    @Column(name = "application_id", nullable = false)
-    private Integer application_id;
+    @Column(name = "leads_id", nullable = false)
+    private Integer leadsId;
 
     @Column(name = "document_type", nullable = false)
     private String document_type;

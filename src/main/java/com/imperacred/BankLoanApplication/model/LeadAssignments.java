@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 	    @Id
 	    @GeneratedValue(strategy = GenerationType.IDENTITY)
 	    private int lead_assignment_id;
-	    private int leads_id;
+	    private Integer leads_id;
 	    private int agent_id;
 	    private LocalDateTime assigned_at;
 	    private String status;

@@ -18,9 +18,15 @@ import com.imperacred.BankLoanApplication.repository.AgentRegistrationRepository
 import com.imperacred.BankLoanApplication.repository.AgentsRepository;
 import com.imperacred.BankLoanApplication.service.AgentRegistrationLoginService;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 public class AgentRegistrationLoginServiceImpl implements AgentRegistrationLoginService {
 
+	private static final Logger logger = LogManager.getLogger(AgentRegistrationLoginServiceImpl.class);
+
+	
     @Autowired
     private AgentRegistrationRepository agentRegistrationRepository;
 
@@ -35,7 +41,18 @@ public class AgentRegistrationLoginServiceImpl implements AgentRegistrationLogin
 
     @Override
     public AgentRegistration registerAgent(AgentRegistrationDTO dto) {
-        // Step 1: Register agent in the agent_registration table
+    	
+    	 logger.info("Starting agent registration for email: {}", dto.getEmail());
+
+    	 if (agentRegistrationRepository.existsByEmail(dto.getEmail())) {
+    	        throw new RuntimeException("Email is already registered.");
+    	    }
+
+    	    // Check if contact number already exists
+    	    if (agentRegistrationRepository.existsByContactno(dto.getContactno())) {
+    	        throw new RuntimeException("Contact number is already registered.");
+    	    }
+        // Register agent in the agent_registration table
         AgentRegistration agent = new AgentRegistration();
         agent.setFullName(dto.getFull_name());
         agent.setEmail(dto.getEmail());
@@ -44,15 +61,18 @@ public class AgentRegistrationLoginServiceImpl implements AgentRegistrationLogin
         agent.setOffice_location(dto.getOffice_location());
         agent.setStatus(dto.getStatus());
         AgentRegistration savedAgent = agentRegistrationRepository.save(agent);
+        
+        logger.debug("Saved agent registration: {}", savedAgent);
 
-        // Step 2: Register agent login details in the agent_login table
+        // Register agent login details in the agent_login table
         AgentLogin login = new AgentLogin();
         login.setAgent_registration_id(savedAgent.getAgent_registration_id());
         login.setEmail(savedAgent.getEmail());
         login.setPassword(savedAgent.getPassword());
         agentLoginRepository.save(login);
 
-        // Step 3: Save agent details in the agents table
+        logger.debug("Saved agent login details for: {}", login.getEmail());
+        //  Save agent details in the agents table
         Agents basicAgent = new Agents();
         basicAgent.setAgent_registration_id(savedAgent.getAgent_registration_id());
         basicAgent.setFull_name(savedAgent.getFullName());
@@ -61,8 +81,11 @@ public class AgentRegistrationLoginServiceImpl implements AgentRegistrationLogin
         basicAgent.setOffice_location(savedAgent.getOffice_location());
         basicAgent.setStatus(savedAgent.getStatus());
         basicAgent = agentsRepository.save(basicAgent);
+        
+        logger.debug("Saved basic agent info: {}", basicAgent.getEmail());
 
-        // Step 4: Create entry in agent_loads table
+
+        //  Create entry in agent_loads table
         AgentLoads agentLoad = new AgentLoads();
         agentLoad.setAgent_id(basicAgent.getAgent_id());  // Assuming basicAgent has the getAgent_id method
         agentLoad.setLeadCount(0); // Initial lead count set to 0

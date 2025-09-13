@@ -9,7 +9,7 @@ import com.imperacred.BankLoanApplication.model.LeadsStatusHistory;
 
 public interface LeadStatusHistoryRepository extends JpaRepository<LeadsStatusHistory, Integer> {
 
-	List<LeadsStatusHistory> findByLeadsId(int leads_id);
+	List<LeadsStatusHistory> findByLeadsId(Integer leads_id);
 
 	List<LeadsStatusHistory> findByAgentId(int agent_id);
  

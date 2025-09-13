@@ -1,5 +1,8 @@
 package com.imperacred.BankLoanApplication.service;
 
-public interface DisbursementsService {
+import com.imperacred.BankLoanApplication.dto.DisbursementsDTO;
 
+public interface DisbursementsService {
+	
+    DisbursementsDTO disburseLoan(DisbursementsDTO disbursementsDTO);
 }
